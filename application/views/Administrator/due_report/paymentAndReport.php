@@ -1,7 +1,12 @@
 <?php
 $branchID = $this->session->userdata('BRANCHid');
 $PamentID = $this->session->userdata('PamentID');
-$SCP = $this->db->query("SELECT tbl_customer_payment.*, tbl_customer.* FROM tbl_customer_payment LEFT JOIN tbl_customer ON tbl_customer.Customer_SlNo = tbl_customer_payment.CPayment_customerID WHERE tbl_customer_payment.CPayment_id = '$PamentID'");
+$SCP = $this->db->query("select cp.*, c.*, ba.*
+from tbl_customer_payment cp
+left join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
+left join tbl_bank_accounts ba on ba.account_id = cp.account_id
+where cp.CPayment_id = '$PamentID'");
+
 $CPROW = $SCP->row();
 $CUSID = $CPROW->CPayment_customerID;
 $paid = $CPROW->CPayment_amount;
@@ -21,7 +26,7 @@ $totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAm
     <div id="reportContent">
         <div class="row" style="margin-bottom: 20px;">
             <div class="col-xs-12">
-                <h6 style="background:#ddd; text-align: center; font-size: 18px; font-weight: 900; padding: 5px; color: #bd4700;">Payment Invoice</h6>
+                <h6 style="background:#ddd; text-align: center; font-size: 18px; font-weight: 900; padding: 5px; color: #bd4700;"><?php echo $CPROW->CPayment_TransactionType == 'CR' ? 'Received' : 'Payment'; ?> Invoice</h6>
             </div>
         </div>
         <div class="row" style="margin-bottom: 20px;">
@@ -50,19 +55,25 @@ $totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAm
                         <tr>
                             <th style="font-size: 14px; font-weight: 700;text-align:center;">Sl No</th>
                             <th style="font-size: 14px; font-weight: 700;text-align:center;">Description</th>
+                            <?php if ($CPROW->CPayment_Paymentby == 'bank' || $CPROW->CPayment_Paymentby == 'wallet'): ?>
+                                <th style="font-size: 14px; font-weight: 700;text-align:center;">Payment Method</th>
+                            <?php endif; ?>
                             <?php if ($CPROW->Customer_Type == 'DSO' || $CPROW->Customer_Type == 'wholesale'): ?>
                                 <th style="font-size: 14px; font-weight: 700;text-align:center;">Gross Sale</th>
                                 <th style="font-size: 14px; font-weight: 700;text-align:center;">Net Sale</th>
                                 <th style="font-size: 14px; font-weight: 700;text-align:center;">Claim Amount</th>
                             <?php endif; ?>
                             <th style="font-size: 14px; font-weight: 700;text-align:center;">Discount</th>
-                            <th style="font-size: 14px; font-weight: 700;text-align:center;">Recieved</th>
+                            <th style="font-size: 14px; font-weight: 700;text-align:center;"><?php echo $CPROW->CPayment_TransactionType == 'CR' ? 'Received' : 'Payment'; ?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td style="text-align: center;">01</td>
                             <td><?php echo $CPROW->CPayment_notes; ?></td>
+                            <?php if ($CPROW->CPayment_Paymentby == 'bank' || $CPROW->CPayment_Paymentby == 'wallet'): ?>
+                                <td style="text-align:center;"><?php echo strtoupper($CPROW->CPayment_Paymentby) . ' - (' . $CPROW->account_name . ' - ' . $CPROW->account_number . ')'; ?></td>
+                            <?php endif; ?>
                             <?php if ($CPROW->Customer_Type == 'DSO' || $CPROW->Customer_Type == 'wholesale'): ?>
                                 <td style="text-align: right;"><?php echo $CPROW->gross_sale; ?></td>
                                 <td style="text-align: right;"><?php echo $CPROW->net_sale; ?></td>
@@ -74,17 +85,17 @@ $totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAm
                             </td>
                         </tr>
                         <tr>
-                            <th colspan="2" style="font-size: 14px; font-weight: 700; text-align: right;">Total:</th>
+                            <th colspan="<?php echo $CPROW->CPayment_Paymentby == 'bank' || $CPROW->CPayment_Paymentby == 'wallet' ? '3' : '2'; ?>" style="font-size: 14px; font-weight: 700; text-align: right;">Total:</th>
                             <?php if ($CPROW->Customer_Type == 'DSO' || $CPROW->Customer_Type == 'wholesale'): ?>
-                            <th style="font-size: 13px; font-weight: 700;text-align:right;">
-                                <?php echo number_format($CPROW->gross_sale, 2); ?>
-                            </th>
-                            <th style="font-size: 13px; font-weight: 700;text-align:right;">
-                                <?php echo number_format($CPROW->net_sale, 2); ?>
-                            </th>
-                            <th style="font-size: 13px; font-weight: 700;text-align:right;">
-                                <?php echo number_format($CPROW->claim_amount, 2); ?>
-                            </th>
+                                <th style="font-size: 13px; font-weight: 700;text-align:right;">
+                                    <?php echo number_format($CPROW->gross_sale, 2); ?>
+                                </th>
+                                <th style="font-size: 13px; font-weight: 700;text-align:right;">
+                                    <?php echo number_format($CPROW->net_sale, 2); ?>
+                                </th>
+                                <th style="font-size: 13px; font-weight: 700;text-align:right;">
+                                    <?php echo number_format($CPROW->claim_amount, 2); ?>
+                                </th>
                             <?php endif; ?>
                             <th style="font-size: 13px; font-weight: 700;text-align:right;">
                                 <?php echo number_format($CPROW->discount, 2); ?>
@@ -99,7 +110,7 @@ $totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAm
         </div>
         <div class="row" style="margin-bottom: 20px;">
             <div class="col-xs-12">
-                <h6 style=" font-size: 12px; font-weight: 600;">Received (In Word): <?php echo convertNumberToWord($CPROW->CPayment_amount); ?></h6>
+                <h6 style=" font-size: 12px; font-weight: 600;"><?php echo $CPROW->CPayment_TransactionType == 'CR' ? 'Received' : 'Payment'; ?> (In Word): <?php echo convertNumberToWord($CPROW->CPayment_amount); ?></h6>
             </div>
         </div>
         <div class="row" style="margin-bottom: 20px;">
@@ -110,7 +121,7 @@ $totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAm
                         <td style="font-size: 13px; font-weight: 600; text-align: right; "> <?php echo number_format($prevdueAmont, 2); ?></td>
                     </tr>
                     <tr>
-                        <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; ">Received : </td>
+                        <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; "><?php echo $CPROW->CPayment_TransactionType == 'CR' ? 'Received' : 'Payment'; ?> : </td>
                         <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; text-align: right; "><?php echo number_format($CPROW->CPayment_amount, 2); ?></td>
                     </tr>
                     <tr>

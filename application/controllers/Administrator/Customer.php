@@ -132,7 +132,8 @@ class Customer extends CI_Controller
                     when 'CP' then 'Paid'
                 end as transaction_type,
                 case cp.CPayment_Paymentby
-                    when 'bank' then concat('Bank - ', ba.account_name, ' - ', ba.account_number, ' - ', ba.bank_name)
+                    when 'bank' then concat('Bank - ',  ba.account_number)
+                    when 'wallet' then concat('Wallet - ', ba.account_number)
                     when 'By Cheque' then 'Cheque'
                     else 'Cash'
                 end as payment_by
@@ -157,8 +158,24 @@ class Customer extends CI_Controller
         try {
             $paymentObj = json_decode($this->input->raw_input_stream);
 
+            // check bank txid uniqueness
+            if ($paymentObj->CPayment_Paymentby == 'bank' && $paymentObj->bank_txid != null && $paymentObj->bank_txid != '') {
+                $checkTxid = $this->db->query("select * from tbl_customer_payment where bank_txid = ? and CPayment_status = 'a'", $paymentObj->bank_txid)->num_rows();
+                if ($checkTxid > 0) {
+                    $res = ['success' => false, 'message' => "Bank TXID already exists"];
+                    echo json_encode($res);
+                    exit;
+                } else {
+                    $paymentObj->bank_txid = $paymentObj->bank_txid;
+                }
+            }
+
+            $checkinv = $this->db->query("select * from tbl_customer_payment where CPayment_invoice = ?", $paymentObj->CPayment_invoice)->num_rows();
+            if ($checkinv > 0) {
+                $paymentObj->CPayment_invoice = $this->mt->generateCustomerPaymentCode();
+            }
+
             $payment = (array)$paymentObj;
-            $payment['CPayment_invoice'] = $this->mt->generateCustomerPaymentCode();
             $payment['CPayment_status'] = 'a';
             $payment['CPayment_Addby'] = $this->session->userdata("FullName");
             $payment['CPayment_AddDAte'] = date('Y-m-d H:i:s');
@@ -179,7 +196,7 @@ class Customer extends CI_Controller
                 $this->sms->sendSms($recipient, $message);
             }
 
-            $res = ['success' => true, 'message' => 'Payment added successfully', 'paymentId' => $paymentId];
+            $res = ['success' => true, 'message' => 'Payment added successfully', 'paymentId' => $paymentId, 'CPayment_invoice' => $this->mt->generateCustomerPaymentCode()];
         } catch (Exception $ex) {
             $res = ['success' => false, 'message' => $ex->getMessage()];
         }
@@ -194,6 +211,18 @@ class Customer extends CI_Controller
             $paymentObj = json_decode($this->input->raw_input_stream);
             $paymentId = $paymentObj->CPayment_id;
 
+            // check bank txid uniqueness
+            if ($paymentObj->CPayment_Paymentby == 'bank' && $paymentObj->bank_txid != null && $paymentObj->bank_txid != '') {
+                $checkTxid = $this->db->query("select * from tbl_customer_payment where bank_txid = ? and CPayment_status = 'a' and CPayment_id != ?", [$paymentObj->bank_txid, $paymentObj->CPayment_id])->num_rows();
+                if ($checkTxid > 0) {
+                    $res = ['success' => false, 'message' => "Bank TXID already exists"];
+                    echo json_encode($res);
+                    exit;
+                } else {
+                    $paymentObj->bank_txid = $paymentObj->bank_txid;
+                }
+            }
+
             $payment = (array)$paymentObj;
             unset($payment['CPayment_id']);
             $payment['update_by'] = $this->session->userdata("FullName");
@@ -201,7 +230,7 @@ class Customer extends CI_Controller
 
             $this->db->where('CPayment_id', $paymentObj->CPayment_id)->update('tbl_customer_payment', $payment);
 
-            $res = ['success' => true, 'message' => 'Payment updated successfully', 'paymentId' => $paymentId];
+            $res = ['success' => true, 'message' => 'Payment updated successfully', 'paymentId' => $paymentId, 'CPayment_invoice' => $this->mt->generateCustomerPaymentCode()];
         } catch (Exception $ex) {
             $res = ['success' => false, 'message' => $ex->getMessage()];
         }
@@ -348,15 +377,6 @@ class Customer extends CI_Controller
         echo json_encode($res);
     }
 
-    public function customeredit()
-    {
-        $data['title'] = "Edit Customer";
-        $id = $this->input->post('edit');
-        $query = $this->db->query("SELECT tbl_customer.*, tbl_district.* FROM tbl_customer left join tbl_district on tbl_district.District_SlNo=tbl_customer.area_ID where tbl_customer.Customer_SlNo = '$id'");
-        $data['selected'] = $query->row();
-        $this->load->view('Administrator/edit/customer_edit', $data);
-    }
-
     public function deleteCustomer()
     {
         $res = ['success' => false, 'message' => ''];
@@ -384,42 +404,6 @@ class Customer extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    function search_customer_due()
-    {
-        $BRANCHid = $this->session->userdata('BRANCHid');
-        $dAta['searchtype'] = $searchtype = $this->input->post('searchtype');
-        $dAta['Sales_startdate'] = $Sales_startdate = $this->input->post('Sales_startdate');
-        $dAta['Sales_enddate'] = $Sales_enddate = $this->input->post('Sales_enddate');
-        $dAta['customerID'] = $customerID = $this->input->post('customerID');
-        $this->session->set_userdata($dAta);
-
-        if ($searchtype == "All") {
-            $result = $this->db->join('tbl_customer', 'tbl_customer.Customer_SlNo=tbl_salesmaster.SalseCustomer_IDNo', 'left')
-                ->where('tbl_salesmaster.SaleMaster_branchid', $BRANCHid)
-                ->group_by('tbl_salesmaster.SalseCustomer_IDNo')
-                ->get('tbl_salesmaster');
-        }
-        if ($searchtype == "Customer") {
-            $result = $this->db->join('tbl_customer', 'tbl_customer.Customer_SlNo=tbl_salesmaster.SalseCustomer_IDNo', 'left')
-                ->where('tbl_salesmaster.SalseCustomer_IDNo', $customerID)
-                ->where('tbl_salesmaster.SaleMaster_branchid', $BRANCHid)
-                ->group_by('tbl_salesmaster.SalseCustomer_IDNo')
-                ->get('tbl_salesmaster');
-        }
-
-        $datas["records"] = $result->result();
-        $this->load->view('Administrator/due_report/customer_due_list', $datas);
-    }
-
-
-    function customer_due_payment($Custid)
-    {
-        $result = $this->db->query("SELECT tbl_salesmaster.*, tbl_customer.* FROM tbl_salesmaster left join tbl_customer on tbl_customer.Customer_SlNo = tbl_salesmaster.SalseCustomer_IDNo WHERE tbl_salesmaster.SalseCustomer_IDNo = '$Custid' group by tbl_salesmaster.SalseCustomer_IDNo");
-        $datas["record"] = $result->result();
-        $this->load->view('Administrator/due_report/customer_due_payment', $datas);
-    }
-
-
     public function customerPaymentPage()
     {
         $access = $this->mt->userAccess();
@@ -427,122 +411,9 @@ class Customer extends CI_Controller
             redirect(base_url());
         }
         $data['title'] = "Payment Received";
-        $data['paymentHis'] = $this->Billing_model->fatch_all_payment();
-        $query0 = $this->db->query("SELECT * FROM tbl_customer_payment ORDER BY CPayment_id DESC LIMIT 1");
-        $row = $query0->row();
-
-        @$invoice = $row->CPayment_invoice;
-        $previousinvoice = substr($invoice, 3, 11);
-        if (!empty($invoice)) {
-            if ($previousinvoice < 10) {
-                $purchInvoice = 'TR-00' . ($previousinvoice + 1);
-            } else if ($previousinvoice < 100) {
-                $purchInvoice = 'TR-0' . ($previousinvoice + 1);
-            } else {
-                $purchInvoice = 'TR-' . ($previousinvoice + 1);
-            }
-        } else {
-            $purchInvoice = 'TR-001';
-        }
-        $data['purchInvoice'] = $purchInvoice;
-        $data['customers'] = $this->Customer_model->get_customer_name_code_brunch_wise();
+        $data['CPayment_invoice'] = $this->mt->generateCustomerPaymentCode();
         $data['content'] = $this->load->view('Administrator/due_report/customerPaymentPage', $data, TRUE);
         $this->load->view('Administrator/index', $data);
-    }
-
-    function fatch_customer_name($Custid = null)
-    {
-        $customer = $this->db->where('Customer_SlNo', $Custid)->get('tbl_customer')->row();
-
-        $data = array(
-            'cus_name'      => $customer->Customer_Name,
-            'due'           => $this->mt->getCustomerDueById($Custid)
-        );
-
-        echo json_encode($data);
-    }
-
-    function paymentEdit($payID = null)
-    {
-        $data['edit'] = $this->db->where('CPayment_id', $payID)->get('tbl_customer_payment')->row();
-        $this->load->view('Administrator/edit/payment_edit_customer', $data);
-    }
-
-    function paymentDelete($payID = null)
-    {
-
-        $attr = array(
-            'CPayment_status' => 'd'
-        );
-
-        $this->db->where('CPayment_id', $payID);
-        $qu = $this->db->update('tbl_customer_payment', $attr);
-
-        if ($this->db->affected_rows()) {
-            echo json_encode(TRUE);
-        } else {
-            echo json_encode(FALSE);
-        }
-    }
-
-    function paymentUpdate($payID = null)
-    {
-
-        $attr = array(
-            "CPayment_date" => $this->input->post('paymentDate', TRUE),
-            "CPayment_invoice" => $this->input->post('tr_id', TRUE),
-            "CPayment_customerID" => $this->input->post('CustID', TRUE),
-            "CPayment_TransactionType" => $this->input->post('tr_type', TRUE),
-            "CPayment_amount" => $this->input->post('paidAmount', TRUE),
-            "CPayment_notes" => $this->input->post('Note', TRUE),
-            "CPayment_Paymentby" => $this->input->post('Paymentby', TRUE),
-            "CPayment_Addby" => $this->session->userdata("FullName"),
-            "CPayment_brunchid" => $this->session->userdata("BRANCHid"),
-            "CPayment_UpdateDAte" => date('Y-m-d'),
-        );
-
-        $this->db->where('CPayment_id', $payID);
-        $qu = $this->db->update('tbl_customer_payment', $attr);
-
-        if ($this->db->affected_rows()) {
-            echo json_encode(TRUE);
-        } else {
-            echo json_encode(FALSE);
-        }
-    }
-
-
-    public function custome_PaymentAmount()
-    {
-        $data = array(
-            "CPayment_date" => $this->input->post('paymentDate', TRUE),
-            "CPayment_invoice" => $this->input->post('tr_id', TRUE),
-            "CPayment_customerID" => $this->input->post('CustID', TRUE),
-            "CPayment_TransactionType" => $this->input->post('tr_type', TRUE),
-            "CPayment_amount" => $this->input->post('paidAmount', TRUE),
-            "CPayment_notes" => $this->input->post('Note', TRUE),
-            "CPayment_Paymentby" => $this->input->post('Paymentby', TRUE),
-            "CPayment_Addby" => $this->session->userdata("FullName"),
-            "CPayment_brunchid" => $this->session->userdata("BRANCHid"),
-            "CPayment_AddDAte" => date('Y-m-d'),
-            "CPayment_status" => 'a',
-        );
-        $pid["PamentID"] = $this->mt->insert_payment("tbl_customer_payment", $data);
-        $this->session->set_userdata($pid);
-        $datas["PamentID"] = $pid["PamentID"];
-        $searchtype = $this->session->userdata('searchtype');
-        $Sales_startdate = $this->session->userdata('Sales_startdate');
-        $Sales_enddate = $this->session->userdata('Sales_enddate');
-        $customerID = $this->session->userdata('customerID');
-        if ($searchtype == "All") {
-            $sql = "SELECT tbl_salesmaster.*, tbl_customer.* FROM tbl_salesmaster left join tbl_customer on tbl_customer.Customer_SlNo = tbl_salesmaster.SalseCustomer_IDNo WHERE tbl_salesmaster.SaleMaster_SaleDate between  '$Sales_startdate' and '$Sales_enddate' group by tbl_salesmaster.SalseCustomer_IDNo";
-        }
-        if ($searchtype == "Customer") {
-            $sql = "SELECT tbl_salesmaster.*, tbl_customer.* FROM tbl_salesmaster left join tbl_customer on tbl_customer.Customer_SlNo = tbl_salesmaster.SalseCustomer_IDNo WHERE tbl_salesmaster.SalseCustomer_IDNo = '$customerID' and  tbl_salesmaster.SaleMaster_SaleDate between  '$Sales_startdate' and '$Sales_enddate' group by tbl_salesmaster.SalseCustomer_IDNo";
-        }
-
-        $datas["record"] = $this->mt->ccdata($sql);
-        $this->load->view('Administrator/due_report/customer_due_list', $datas);
     }
 
     function paymentAndReport($id = Null)
@@ -680,105 +551,6 @@ class Customer extends CI_Controller
         $res['previousBalance'] = $previousBalance;
         $res['payments'] = $payments;
         echo json_encode($res);
-    }
-
-    function search_customer_payments()
-    {
-        $dAta['searchtype'] = $searchtype = $this->input->post('searchtype');
-        $dAta['startdate'] = $startdate = $this->input->post('startdate');
-        $dAta['enddate'] = $enddate = $this->input->post('enddate');
-        $dAta['customerID'] = $customerID = $this->input->post('customerID');
-        $this->session->set_userdata($dAta);
-        //echo "<pre>";print_r($dAta);exit;
-        $BRANCHid = $this->session->userdata("BRANCHid");
-        if ($searchtype == "All") {
-            $sql = "SELECT tbl_customer_payment.*, tbl_customer.* 
-                    FROM tbl_customer_payment 
-                    left join tbl_customer on tbl_customer.Customer_SlNo = tbl_customer_payment.CPayment_customerID 
-                    where tbl_customer.Customer_brunchid='$BRANCHid' 
-                    AND tbl_customer_payment.CPayment_date between '$startdate' and '$enddate'";
-            $result = $this->db->query($sql);
-        } else if ($searchtype == "Customer") {
-
-            $this->db->select('tbl_customer_payment.*, tbl_customer.*');
-            $this->db->from('tbl_customer_payment');
-            $this->db->join('tbl_customer', 'tbl_customer_payment.CPayment_customerID = tbl_customer.Customer_SlNo', 'left');
-            $this->db->where('tbl_customer_payment.CPayment_customerID', $customerID);
-            $this->db->where('tbl_customer_payment.CPayment_date >=', $startdate)->where('tbl_customer_payment.CPayment_date <=', $enddate);
-            $this->db->group_by('tbl_customer_payment.CPayment_invoice');
-            $this->db->order_by('tbl_customer_payment.CPayment_date');
-            $result = $this->db->get();
-        }
-
-        $dueSql = "SELECT 
-            c.Customer_Name,
-            c.previous_due,
-            (select ifnull(sum(SaleMaster_SubTotalAmount), 0.00) 
-                from tbl_salesmaster 
-                where SalseCustomer_IDNo = c.Customer_SlNo
-                and SaleMaster_SaleDate < '$startdate') as salesAmount,
-            (select ifnull(sum(CPayment_amount), 0.00) 
-                from tbl_customer_payment 
-                where CPayment_customerID = c.Customer_SlNo
-                and CPayment_date < '$startdate') as paidAmount,
-            (select ifnull(sum(sr.SaleReturn_ReturnAmount), 0.00)
-                from tbl_salereturn sr
-                join tbl_salesmaster sm on sm.SaleMaster_InvoiceNo = sr.SaleMaster_InvoiceNo
-                where sm.SalseCustomer_IDNo = c.Customer_SlNo
-                and sr.SaleReturn_ReturnDate < '$startdate') as returnAmount,
-            (select (c.previous_due + salesAmount) - (paidAmount + returnAmount)) as dueAmount
-            from tbl_customer c
-            where Customer_SLNo = '$customerID'";
-
-        $dueResult = $this->db->query($dueSql);
-
-        $datas["record"] = $result->result();
-        $datas["recordss"] = $result->row();
-        $datas["due"] = $dueResult->row();
-        //echo "<pre>";print_r($datas["record"]);exit;
-        $this->load->view('Administrator/payment_reports/customer_payment_report_list', $datas);
-    }
-
-    public function advance_payment()
-    {
-        $data['title'] = "Customer Advance Payment";
-        $data['content'] = $this->load->view('Administrator/due_report/customer_advance_payment', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-
-    public function advance_payment_customer_search()
-    {
-        $data['customerID'] = $this->input->post('customerID');
-        $this->load->view('Administrator/due_report/advance_payment_customer_search', $data);
-    }
-
-    public function advance_payment_insert()
-    {
-        $data = array(
-            "CPayment_date" => $this->input->post('CAPdate', TRUE),
-            "CPayment_customerID" => $this->input->post('CustID', TRUE),
-            "CPayment_amount" => $this->input->post('AdvanceAmount', TRUE),
-            "CPayment_notes" => $this->input->post('Note', TRUE),
-            "CPayment_Addby" => $this->session->userdata("FullName"),
-            "CPayment_brunchid" => $this->session->userdata("BRANCHid")
-        );
-        $pid["PamentID"] = $this->mt->insert_payment("tbl_customer_payment", $data);
-        $this->session->set_userdata($pid);
-        $datas["PamentID"] = $pid["PamentID"];
-        $this->load->view('Administrator/due_report/customer_advance_payment', $datas);
-    }
-
-    public function customer_advance_payment_to_report()
-    {
-        $data['title'] = "Customer Advance Payment Report";
-        $data['content'] = $this->load->view('Administrator/due_report/customer_advance_payment_to_report', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-
-    function searchcustomer()
-    {
-        $data['Searchkey'] = $this->input->post('Searchkey');
-        $this->load->view('Administrator/ajax/search_customer', $data);
     }
 
     public function customerPaymentHistory()
