@@ -161,6 +161,10 @@ class Invest extends CI_Controller {
             order by lt.transaction_id desc
         ", $this->session->userdata('BRANCHid'))->result();
 
+        foreach ($transactions as $key => $transaction) {
+            $transaction->canEditDelete = checkEditDelete($this->session->userdata('accountType'), $transaction->saved_datetime);
+        }
+
         echo json_encode($transactions);
     }
 

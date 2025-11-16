@@ -1,50 +1,62 @@
 <style>
-	.v-select{
+	.v-select {
 		margin-bottom: 5px;
 	}
-	.v-select.open .dropdown-toggle{
+
+	.v-select.open .dropdown-toggle {
 		border-bottom: 1px solid #ccc;
 	}
-	.v-select .dropdown-toggle{
+
+	.v-select .dropdown-toggle {
 		padding: 0px;
 		height: 25px;
 	}
-	.v-select input[type=search], .v-select input[type=search]:focus{
+
+	.v-select input[type=search],
+	.v-select input[type=search]:focus {
 		margin: 0px;
 	}
-	.v-select .vs__selected-options{
+
+	.v-select .vs__selected-options {
 		overflow: hidden;
-		flex-wrap:nowrap;
+		flex-wrap: nowrap;
 	}
-	.v-select .selected-tag{
+
+	.v-select .selected-tag {
 		margin: 2px 0px;
 		white-space: nowrap;
-		position:absolute;
+		position: absolute;
 		left: 0px;
 	}
-	.v-select .vs__actions{
-		margin-top:-5px;
+
+	.v-select .vs__actions {
+		margin-top: -5px;
 	}
-	.v-select .dropdown-menu{
+
+	.v-select .dropdown-menu {
 		width: auto;
-		overflow-y:auto;
+		overflow-y: auto;
 	}
-	#customerPayment label{
-		font-size:13px;
+
+	#customerPayment label {
+		font-size: 13px;
 	}
-	#customerPayment select{
+
+	#customerPayment select {
 		border-radius: 3px;
 		padding: 0;
 	}
-	#customerPayment .add-button{
+
+	#customerPayment .add-button {
 		padding: 2.5px;
 		width: 28px;
 		background-color: #298db4;
-		display:block;
+		display: block;
 		text-align: center;
 		color: white;
 	}
-	#customerPayment .add-button:hover{
+
+	#customerPayment .add-button:hover {
 		background-color: #41add6;
 		color: white;
 	}
@@ -55,17 +67,6 @@
 			<form @submit.prevent="saveCustomerPayment">
 				<div class="row">
 					<div class="col-md-5 col-md-offset-1">
-						<div class="form-group">
-							<label class="col-md-4 control-label">Transaction Type</label>
-							<label class="col-md-1">:</label>
-							<div class="col-md-7">
-								<select class="form-control" v-model="payment.CPayment_TransactionType" required>
-									<option value=""></option>
-									<option value="CR">Receive</option>
-									<option value="CP">Payment</option>
-								</select>
-							</div>
-						</div>
 						<div class="form-group">
 							<label class="col-md-4 control-label">Payment Type</label>
 							<label class="col-md-1">:</label>
@@ -95,15 +96,12 @@
 							</div>
 						</div>
 						<div class="form-group">
-							<label class="col-md-4 control-label">Due</label>
+							<label class="col-md-4 control-label">Wallet Balance</label>
 							<label class="col-md-1">:</label>
 							<div class="col-md-7">
 								<input type="text" class="form-control" v-model="payment.CPayment_previous_due" disabled>
 							</div>
 						</div>
-					</div>
-
-					<div class="col-md-5">
 						<div class="form-group">
 							<label class="col-md-4 control-label">Payment Date</label>
 							<label class="col-md-1">:</label>
@@ -111,6 +109,73 @@
 								<input type="date" class="form-control" v-model="payment.CPayment_date" required @change="getCustomerPayments" v-bind:disabled="userType == 'u' ? true : false">
 							</div>
 						</div>
+					</div>
+
+					<div class="col-md-5">
+						<div class="form-group" style="display: none;" :style="{display: selectedCustomer.Customer_Type == 'DSO' || selectedCustomer.Customer_Type == 'wholesale' ? '' : 'none'}">
+							<label class="col-md-4 control-label">Gross Sale</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.gross_sale" @input="calculateTotal">
+							</div>
+						</div>
+
+						<div class="form-group" style="display: none;" :style="{display: selectedCustomer.Customer_Type == 'DSO' || selectedCustomer.Customer_Type == 'wholesale' ? '' : 'none'}">
+							<label class="col-md-4 control-label">Net Sale</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.net_sale" @input="calculateTotal">
+							</div>
+						</div>
+
+						<div class="form-group" style="display: none;" :style="{display: selectedCustomer.Customer_Type == 'DSO' || selectedCustomer.Customer_Type == 'wholesale' ? '' : 'none'}">
+							<label class="col-md-4 control-label">Claim Amount</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.claim_amount" readonly>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Discount</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.discount" @input="calculateTotal">
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label class="col-md-4 control-label">Cash Amount</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.CPayment_amount" @input="calculateTotal">
+							</div>
+						</div>
+
+						<div class="form-group" style="display: none;" :style="{display: selectedCustomer.Customer_Type == 'DSO' || selectedCustomer.Customer_Type == 'wholesale' ? '' : 'none'}">
+							<label class="col-md-4 control-label">Cheque Amount</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.cheque_amount" @input="calculateTotal">
+							</div>
+						</div>
+
+						<div class="form-group" style="display: none;" :style="{display: payment.cheque_amount ? '' : 'none'}">
+							<label class="col-md-4 control-label">Cheque Number</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="text" class="form-control" v-model="payment.cheque_number">
+							</div>
+						</div>
+
+						<div class="form-group" style="display: none;" :style="{display: selectedCustomer.Customer_Type == 'DSO' || selectedCustomer.Customer_Type == 'wholesale' ? '' : 'none'}">
+							<label class="col-md-4 control-label">Due Balance</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="number" min="0" step="any" class="form-control" v-model="payment.dueBalance" readonly>
+							</div>
+						</div>
+
 						<div class="form-group">
 							<label class="col-md-4 control-label">Description</label>
 							<label class="col-md-1">:</label>
@@ -118,13 +183,7 @@
 								<input type="text" class="form-control" v-model="payment.CPayment_notes">
 							</div>
 						</div>
-						<div class="form-group">
-							<label class="col-md-4 control-label">Amount</label>
-							<label class="col-md-1">:</label>
-							<div class="col-md-7">
-								<input type="number" class="form-control" v-model="payment.CPayment_amount" required>
-							</div>
-						</div>
+
 						<div class="form-group">
 							<div class="col-md-7 col-md-offset-5">
 								<input type="submit" class="btn btn-success btn-sm" value="Save">
@@ -152,23 +211,24 @@
 							<td>{{ row.CPayment_invoice }}</td>
 							<td>{{ row.CPayment_date }}</td>
 							<td>{{ row.Customer_Name }}</td>
-							<td>{{ row.transaction_type }}</td>
 							<td>{{ row.payment_by }}</td>
+							<td>{{ row.gross_sale }}</td>
+							<td>{{ row.net_sale }}</td>
+							<td>{{ row.claim_amount }}</td>
+							<td>{{ row.discount }}</td>
 							<td>{{ row.CPayment_amount }}</td>
+							<td>{{ row.dueBalance }}</td>
 							<td>{{ row.CPayment_notes }}</td>
-							<td>{{ row.CPayment_Addby }}</td>
 							<td>
 								<button type="button" class="button edit" @click="window.location = `/paymentAndReport/${row.CPayment_id}`">
 									<i class="fa fa-file-o"></i>
 								</button>
-								<?php if($this->session->userdata('accountType') != 'u'){?>
-								<button type="button" class="button edit" @click="editPayment(row)">
+								<button v-if="row.canEditDelete" type="button" class="button edit" @click="editPayment(row)">
 									<i class="fa fa-pencil"></i>
 								</button>
-								<button type="button" class="button" @click="deletePayment(row.CPayment_id)">
+								<button v-if="row.canEditDelete" type="button" class="button" @click="deletePayment(row.CPayment_id)">
 									<i class="fa fa-trash"></i>
 								</button>
-								<?php }?>
 							</td>
 						</tr>
 					</template>
@@ -179,17 +239,17 @@
 	</div>
 </div>
 
-<script src="<?php echo base_url();?>assets/js/vue/vue.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/axios.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vuejs-datatable.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vue-select.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/moment.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/axios.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vuejs-datatable.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue-select.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/moment.min.js"></script>
 
 <script>
 	Vue.component('v-select', VueSelect.VueSelect);
 	new Vue({
 		el: '#customerPayment',
-		data(){
+		data() {
 			return {
 				payment: {
 					CPayment_id: 0,
@@ -198,7 +258,14 @@
 					CPayment_Paymentby: 'cash',
 					account_id: null,
 					CPayment_date: moment().format('YYYY-MM-DD'),
+					gross_sale: 0,
+					net_sale: 0,
+					claim_amount: 0,
+					discount: 0,
 					CPayment_amount: '',
+					cheque_amount: 0,
+					cheque_number: null,
+					dueBalance: 0,
 					CPayment_notes: '',
 					CPayment_previous_due: 0
 				},
@@ -206,44 +273,95 @@
 				customers: [],
 				selectedCustomer: {
 					display_name: 'Select Customer',
-					Customer_Name: ''
+					Customer_Name: '',
+					Customer_Type: 'retail'
 				},
 				accounts: [],
-                selectedAccount: null,
-				userType: '<?php echo $this->session->userdata("accountType");?>',
-				
-				columns: [
-                    { label: 'Transaction Id', field: 'CPayment_invoice', align: 'center' },
-                    { label: 'Date', field: 'CPayment_date', align: 'center' },
-                    { label: 'Customer', field: 'Customer_Name', align: 'center' },
-                    { label: 'Transaction Type', field: 'transaction_type', align: 'center' },
-                    { label: 'Payment by', field: 'payment_by', align: 'center' },
-                    { label: 'Amount', field: 'CPayment_amount', align: 'center' },
-                    { label: 'Description', field: 'CPayment_notes', align: 'center' },
-                    { label: 'Saved By', field: 'CPayment_Addby', align: 'center' },
-                    { label: 'Action', align: 'center', filterable: false }
-                ],
-                page: 1,
-                per_page: 10,
-                filter: ''
+				selectedAccount: null,
+				userType: '<?php echo $this->session->userdata("accountType"); ?>',
+
+				columns: [{
+						label: 'Transaction Id',
+						field: 'CPayment_invoice',
+						align: 'center'
+					},
+					{
+						label: 'Date',
+						field: 'CPayment_date',
+						align: 'center'
+					},
+					{
+						label: 'Customer',
+						field: 'Customer_Name',
+						align: 'center'
+					},
+					{
+						label: 'Payment by',
+						field: 'payment_by',
+						align: 'center'
+					},
+					{
+						label: 'Gross Sale',
+						field: 'gross_sale',
+						align: 'center'
+					},
+					{
+						label: 'Net Sale',
+						field: 'net_sale',
+						align: 'center'
+					},
+					{
+						label: 'Claim Amount',
+						field: 'claim_amount',
+						align: 'center'
+					},
+					{
+						label: 'Discount',
+						field: 'discount',
+						align: 'center'
+					},
+					{
+						label: 'Cash Received',
+						field: 'CPayment_amount',
+						align: 'center'
+					},
+					{
+						label: 'Due Balance',
+						field: 'dueBalance',
+						align: 'center'
+					},
+					{
+						label: 'Description',
+						field: 'CPayment_notes',
+						align: 'center'
+					},
+					{
+						label: 'Action',
+						align: 'center',
+						filterable: false
+					}
+				],
+				page: 1,
+				per_page: 10,
+				filter: ''
 			}
 		},
 		computed: {
-            filteredAccounts(){
-                let accounts = this.accounts.filter(account => account.status == '1');
-                return accounts.map(account => {
-                    account.display_text = `${account.account_name} - ${account.account_number} (${account.bank_name})`;
-                    return account;
-                })
-            },
-        },
-		created(){
+			filteredAccounts() {
+				let accounts = this.accounts.filter(account => account.status == '1');
+				return accounts.map(account => {
+					account.display_text = `${account.account_name} - ${account.account_number} (${account.bank_name})`;
+					return account;
+				})
+			},
+		},
+		created() {
 			this.getCustomers();
 			this.getAccounts();
 			this.getCustomerPayments();
 		},
-		methods:{
-			getCustomerPayments(){
+		methods: {
+			getCustomerPayments() {
 				let data = {
 					dateFrom: this.payment.CPayment_date,
 					dateTo: this.payment.CPayment_date
@@ -252,32 +370,41 @@
 					this.payments = res.data;
 				})
 			},
-			getCustomers(){
+			getCustomers() {
 				axios.get('/get_customers').then(res => {
 					this.customers = res.data;
 				})
 			},
-			getCustomerDue(){
-				if(event.type == "click"){
+			getCustomerDue() {
+				if (event.type == "click") {
 					return;
 				}
-				if(this.selectedCustomer == null || this.selectedCustomer.Customer_SlNo == undefined){
+				if (this.selectedCustomer == null || this.selectedCustomer.Customer_SlNo == undefined) {
 					return;
 				}
 
-				axios.post('/get_customer_due', {customerId: this.selectedCustomer.Customer_SlNo}).then(res => {
+				axios.post('/get_customer_due', {
+					customerId: this.selectedCustomer.Customer_SlNo
+				}).then(res => {
 					this.payment.CPayment_previous_due = res.data[0].dueAmount;
 				})
 			},
-			getAccounts(){
-                axios.get('/get_bank_accounts')
-                .then(res => {
-                    this.accounts = res.data;
-                })
-            },
-			saveCustomerPayment(){
-				if(this.payment.CPayment_Paymentby == 'bank'){
-					if(this.selectedAccount == null){
+			getAccounts() {
+				axios.get('/get_bank_accounts')
+					.then(res => {
+						this.accounts = res.data;
+					})
+			},
+			calculateTotal() {
+				if (this.selectedCustomer.Customer_Type == 'wholesale' || this.selectedCustomer.Customer_Type == 'DSO') {
+					this.payment.claim_amount = parseFloat(this.payment.gross_sale - this.payment.net_sale).toFixed(2);
+
+					this.payment.dueBalance = parseFloat((this.payment.net_sale - this.payment.discount) - (+this.payment.CPayment_amount + +this.payment.cheque_amount)).toFixed(2);
+				}
+			},
+			saveCustomerPayment() {
+				if (this.payment.CPayment_Paymentby == 'bank') {
+					if (this.selectedAccount == null) {
 						alert('Select an account');
 						return;
 					} else {
@@ -286,7 +413,7 @@
 				} else {
 					this.payment.account_id = null;
 				}
-				if(this.selectedCustomer == null || this.selectedCustomer.Customer_SlNo == undefined){
+				if (this.selectedCustomer == null || this.selectedCustomer.Customer_SlNo == undefined) {
 					alert('Select Customer');
 					return;
 				}
@@ -294,23 +421,23 @@
 				this.payment.CPayment_customerID = this.selectedCustomer.Customer_SlNo;
 
 				let url = '/add_customer_payment';
-				if(this.payment.CPayment_id != 0){
+				if (this.payment.CPayment_id != 0) {
 					url = '/update_customer_payment';
 				}
 				axios.post(url, this.payment).then(res => {
 					let r = res.data;
 					alert(r.message);
-					if(r.success){
+					if (r.success) {
 						this.resetForm();
 						this.getCustomerPayments();
 						let invoiceConfirm = confirm('Do you want to view invoice?');
-						if(invoiceConfirm == true){
-							window.open('/paymentAndReport/'+r.paymentId, '_blank');
+						if (invoiceConfirm == true) {
+							window.open('/paymentAndReport/' + r.paymentId, '_blank');
 						}
 					}
 				})
 			},
-			editPayment(payment){
+			editPayment(payment) {
 				let keys = Object.keys(this.payment);
 				keys.forEach(key => {
 					this.payment[key] = payment[key];
@@ -319,10 +446,11 @@
 				this.selectedCustomer = {
 					Customer_SlNo: payment.CPayment_customerID,
 					Customer_Name: payment.Customer_Name,
+					Customer_Type: payment.Customer_Type,
 					display_name: `${payment.CPayment_customerID} - ${payment.Customer_Name}`
 				}
 
-				if(payment.CPayment_Paymentby == 'bank'){
+				if (payment.CPayment_Paymentby == 'bank') {
 					this.selectedAccount = {
 						account_id: payment.account_id,
 						account_name: payment.account_name,
@@ -332,30 +460,33 @@
 					}
 				}
 			},
-			deletePayment(paymentId){
+			deletePayment(paymentId) {
 				let deleteConfirm = confirm('Are you sure?');
-				if(deleteConfirm == false){
+				if (deleteConfirm == false) {
 					return;
 				}
-				axios.post('/delete_customer_payment', {paymentId: paymentId}).then(res => {
+				axios.post('/delete_customer_payment', {
+					paymentId: paymentId
+				}).then(res => {
 					let r = res.data;
 					alert(r.message);
-					if(r.success){
+					if (r.success) {
 						this.getCustomerPayments();
 					}
 				})
 			},
-			resetForm(){
+			resetForm() {
 				this.payment.CPayment_id = 0;
 				this.payment.CPayment_customerID = '';
 				this.payment.CPayment_amount = '';
 				this.payment.CPayment_notes = '';
-				
+
 				this.selectedCustomer = {
 					display_name: 'Select Customer',
-					Customer_Name: ''
+					Customer_Name: '',
+					Customer_Type: 'retail'
 				}
-				
+
 				this.payment.CPayment_previous_due = 0;
 			}
 		}

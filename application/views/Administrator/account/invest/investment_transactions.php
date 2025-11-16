@@ -1,48 +1,56 @@
 <style>
-	.v-select{
-		margin-bottom: 5px;
-	}
-	.v-select .dropdown-toggle{
-		padding: 0px;
-	}
-	.v-select input[type=search], .v-select input[type=search]:focus{
-		margin: 0px;
-	}
-	.v-select .vs__selected-options{
-		overflow: hidden;
-		flex-wrap:nowrap;
-	}
-	.v-select .selected-tag{
-		margin: 2px 0px;
-		white-space: nowrap;
-		position:absolute;
-		left: 0px;
-	}
-	.v-select .vs__actions{
-		margin-top:-5px;
-	}
-	.v-select .dropdown-menu{
-		width: auto;
-		overflow-y:auto;
-	}
-    .button{
+    .v-select {
+        margin-bottom: 5px;
+    }
+
+    .v-select .dropdown-toggle {
+        padding: 0px;
+    }
+
+    .v-select input[type=search],
+    .v-select input[type=search]:focus {
+        margin: 0px;
+    }
+
+    .v-select .vs__selected-options {
+        overflow: hidden;
+        flex-wrap: nowrap;
+    }
+
+    .v-select .selected-tag {
+        margin: 2px 0px;
+        white-space: nowrap;
+        position: absolute;
+        left: 0px;
+    }
+
+    .v-select .vs__actions {
+        margin-top: -5px;
+    }
+
+    .v-select .dropdown-menu {
+        width: auto;
+        overflow-y: auto;
+    }
+
+    .button {
         width: 25px;
         height: 25px;
         border: none;
         color: white;
     }
-    .active-button{
+
+    .active-button {
         background-color: rgb(252, 89, 89);
     }
 
-    .transaction-deposit{
+    .transaction-deposit {
         background-color: #f0f4f0;
-    }   
+    }
 
-    .transaction-withdraw{
+    .transaction-withdraw {
         background-color: #fff4f4;
     }
-    
 </style>
 
 <div id="bankTransactions">
@@ -113,11 +121,10 @@
                         </form>
                     </div>
 
-                    <div class="col-md-2 col-md-offset-1 text-center" style="display:none;" 
-                        v-bind:style="{display: selectedAccount == null || selectedAccount.Acc_SlNo == undefined ? 'none' : ''}"
-                    >
+                    <div class="col-md-2 col-md-offset-1 text-center" style="display:none;"
+                        v-bind:style="{display: selectedAccount == null || selectedAccount.Acc_SlNo == undefined ? 'none' : ''}">
                         <div style="width: 100%;min-height: 150px;padding:15px 5px;background: #eeeeee;border: 1px solid #cdcdcd;margin-top: 15px;">
-                            <i class="fa fa-dollar fa-2x"></i> 
+                            <i class="fa fa-dollar fa-2x"></i>
                             <h5>Current Balance</h5>
                             <h3 style="color: green;">{{ accountBalance }}</h3>
                         </div>
@@ -126,7 +133,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="widget-box">
         <div class="widget-header">
             <h4 class="widget-title">Transaction List</h4>
@@ -162,14 +169,12 @@
                                         <td>{{ row.amount }}</td>
                                         <td>{{ row.saved_by }}</td>
                                         <td>
-                                            <?php if($this->session->userdata('accountType') != 'u'){?>
-                                            <button class="button btn-info" @click="editTransaction(row)">
+                                            <button v-if="row.canEditDelete" class="button btn-info" @click="editTransaction(row)">
                                                 <i class="fa fa-pencil"></i>
                                             </button>
-                                            <button class="button active-button" @click="removeTransaction(row)">
+                                            <button v-if="row.canEditDelete" class="button active-button" @click="removeTransaction(row)">
                                                 <i class="fa fa-trash"></i>
                                             </button>
-                                            <?php }?>
                                         </td>
                                     </tr>
                                 </template>
@@ -183,17 +188,17 @@
     </div>
 </div>
 
-<script src="<?php echo base_url();?>assets/js/vue/vue.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/axios.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vuejs-datatable.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vue-select.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/moment.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/axios.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vuejs-datatable.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue-select.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/moment.min.js"></script>
 
 <script>
     Vue.component('v-select', VueSelect.VueSelect);
     new Vue({
         el: '#bankTransactions',
-        data(){
+        data() {
             return {
                 transaction: {
                     transaction_id: 0,
@@ -204,15 +209,46 @@
                     note: ''
                 },
                 transactions: [],
-                columns: [
-                    { label: 'Transaction Date', field: 'transaction_date', align: 'center' },
-                    { label: 'Account Code', field: 'Acc_Code', align: 'center' },
-                    { label: 'Account Name', field: 'Acc_Name', align: 'center' },
-                    { label: 'Transaction Type', field: 'transaction_type', align: 'center' },
-                    { label: 'Note', field: 'note', align: 'center' },
-                    { label: 'Amount', field: 'amount', align: 'center' },
-                    { label: 'Saved By', field: 'saved_by', align: 'center' },
-                    { label: 'Action', align: 'center', filterable: false }
+                columns: [{
+                        label: 'Transaction Date',
+                        field: 'transaction_date',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Account Code',
+                        field: 'Acc_Code',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Account Name',
+                        field: 'Acc_Name',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Transaction Type',
+                        field: 'transaction_type',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Note',
+                        field: 'note',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Amount',
+                        field: 'amount',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Saved By',
+                        field: 'saved_by',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Action',
+                        align: 'center',
+                        filterable: false
+                    }
                 ],
                 page: 1,
                 per_page: 10,
@@ -224,7 +260,7 @@
             }
         },
         computed: {
-            filteredAccounts(){
+            filteredAccounts() {
                 let accounts = this.accounts;
                 return accounts.map(account => {
                     account.display_text = `${account.Acc_Code} - ${account.Acc_Name}`;
@@ -232,31 +268,31 @@
                 })
             },
         },
-        created(){
+        created() {
             this.getAccounts();
             this.getTransactions();
         },
         methods: {
-            getAccounts(){
+            getAccounts() {
                 axios.get('/get_investment_accounts')
-                .then(res => {
-                    this.accounts = res.data;
-                })
+                    .then(res => {
+                        this.accounts = res.data;
+                    })
             },
 
-            getTransactions(){
+            getTransactions() {
                 let data = {
                     dateFrom: this.transaction.transaction_date,
                     dateTo: this.transaction.transaction_date
                 }
                 axios.post('/get_investment_transactions', data)
-                .then(res => {
-                    this.transactions = res.data;
-                })
+                    .then(res => {
+                        this.transactions = res.data;
+                    })
             },
 
-            saveTransaction(){
-                if(this.selectedAccount == null){
+            saveTransaction() {
+                if (this.selectedAccount == null) {
                     alert('Select an Account');
                     return;
                 }
@@ -264,29 +300,29 @@
                 this.transaction.account_id = this.selectedAccount.Acc_SlNo;
 
                 let url = '/add_investment_transaction';
-                if(this.transaction.transaction_id != 0){
+                if (this.transaction.transaction_id != 0) {
                     url = '/update_investment_transaction';
                 }
 
                 this.onProgress = true;
                 axios.post(url, this.transaction)
-                .then(res => {
-                    let r = res.data;
-                    alert(r.message);
-                    if(r.success){
-                        this.resetForm();
-                        this.getTransactions();
-                        this.onProgress = false;
-                    }
-                })
-                .catch(error => {
-                    if(error.response){
-                        alert(`${error.response.status}, ${error.response.statusText}`)
-                    }
-                })
+                    .then(res => {
+                        let r = res.data;
+                        alert(r.message);
+                        if (r.success) {
+                            this.resetForm();
+                            this.getTransactions();
+                            this.onProgress = false;
+                        }
+                    })
+                    .catch(error => {
+                        if (error.response) {
+                            alert(`${error.response.status}, ${error.response.statusText}`)
+                        }
+                    })
             },
 
-            editTransaction(transaction){
+            editTransaction(transaction) {
                 let keys = Object.keys(this.transaction);
                 keys.forEach(key => this.transaction[key] = transaction[key]);
                 this.selectedAccount = {
@@ -297,38 +333,40 @@
                 }
             },
 
-            removeTransaction(transaction){
+            removeTransaction(transaction) {
                 let confirmation = confirm('Are you sure?');
-                if(confirmation == false){
+                if (confirmation == false) {
                     return;
                 }
 
                 axios.post('/remove_investment_transaction', transaction)
-                .then(res => {
-                    let r =  res.data;
-                    alert(r.message);
-                    if(r.success){
-                        this.getTransactions();
-                    }
-                })
-                .catch(error => {
-                    if(error.response){
-                        alert(`${error.response.status}, ${error.response.statusText}`)
-                    }
-                })
+                    .then(res => {
+                        let r = res.data;
+                        alert(r.message);
+                        if (r.success) {
+                            this.getTransactions();
+                        }
+                    })
+                    .catch(error => {
+                        if (error.response) {
+                            alert(`${error.response.status}, ${error.response.statusText}`)
+                        }
+                    })
             },
 
-            getAccountBalance(){
-                if(this.selectedAccount == null || this.selectedAccount.Acc_SlNo == undefined){
+            getAccountBalance() {
+                if (this.selectedAccount == null || this.selectedAccount.Acc_SlNo == undefined) {
                     return;
                 }
 
-                axios.post('/get_investment_balance', {accountId: this.selectedAccount.Acc_SlNo}).then(res => {
+                axios.post('/get_investment_balance', {
+                    accountId: this.selectedAccount.Acc_SlNo
+                }).then(res => {
                     this.accountBalance = res.data[0].balance;
                 })
             },
 
-            resetForm(){
+            resetForm() {
                 this.transaction.transaction_id = '';
                 this.transaction.account_id = '';
                 this.transaction.transaction_type = '';

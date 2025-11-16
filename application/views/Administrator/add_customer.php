@@ -233,6 +233,8 @@
 							</td>
 							<td>{{row.amount}}</td>
 							<td>{{row.point}}</td>
+							<td>{{row.Customer_Credit_Limit}}</td>
+							<td>{{row.dueAmount}}</td>
 							<td>
 								<?php if ($this->session->userdata('accountType') != 'u') { ?>
 									<button type="button" class="button edit" @click="editCustomer(row)">
@@ -240,6 +242,9 @@
 									</button>
 									<button type="button" class="button" @click="deleteCustomer(row.Customer_SlNo)">
 										<i class="fa fa-trash"></i>
+									</button>
+									<button title="Customer Ledger" type="button" class="button" @click="gotoLedger(row.Customer_SlNo)">
+										<i class="fa fa-book"></i>
 									</button>
 								<?php } ?>
 							</td>
@@ -322,13 +327,23 @@
 						align: 'center'
 					},
 					{
-						label: 'Amount',
+						label: 'Point',
+						field: 'point',
+						align: 'center'
+					},
+					{
+						label: 'PointAmount',
 						field: 'amount',
 						align: 'center'
 					},
 					{
-						label: 'Point',
-						field: 'point',
+						label: 'C.Limit',
+						field: 'Customer_Credit_Limit',
+						align: 'center'
+					},
+					{
+						label: 'Balance',
+						field: 'dueAmount',
 						align: 'center'
 					},
 					{
@@ -348,6 +363,9 @@
 			this.getCustomers();
 		},
 		methods: {
+			gotoLedger(customerId) {
+				window.open(`/customerPaymentReport/${customerId}`, '_blank');
+			},
 			getDistricts() {
 				axios.get('/get_districts').then(res => {
 					this.districts = res.data;

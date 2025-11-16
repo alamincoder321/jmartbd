@@ -46,7 +46,9 @@
         border-radius: 3px;
         padding: 0;
     }
-    tr td, tr th{
+
+    tr td,
+    tr th {
         vertical-align: middle !important;
     }
 </style>
@@ -76,7 +78,7 @@
                             <label class="col-md-4 control-label">Transfer To</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7 col-xs-11">
-                                <v-select v-bind:options="branches" v-model="selectedToBranch" label="Brunch_name"></v-select>
+                                <v-select v-bind:options="branches" v-model="selectedToBranch" label="Brunch_name" @input="onChangeTransfer"></v-select>
                             </div>
                         </div>
 
@@ -94,7 +96,7 @@
                             <label class="col-md-4 control-label">Payment Type</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7">
-                                <select class="form-control" required v-model="transaction.paymentType">
+                                <select class="form-control" required v-model="transaction.paymentType" @change="onChangePaymentType">
                                     <option value="cash">Cash</option>
                                     <option value="bank">Bank</option>
                                 </select>
@@ -102,10 +104,18 @@
                         </div>
 
                         <div class="form-group" style="display: none;" :style="{ display: transaction.paymentType == 'bank' ? '' : 'none' }" v-if="transaction.paymentType == 'bank'">
-                            <label class="col-md-4 control-label">Bank</label>
+                            <label class="col-md-4 control-label">From Bank</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7 col-xs-11">
-                                <v-select v-bind:options="banks" v-model="selectedBank" label="display_name"></v-select>
+                                <v-select v-bind:options="banks" v-model="selectedFromBank" label="display_name"></v-select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: none;" :style="{ display: transaction.paymentType == 'bank' ? '' : 'none' }" v-if="transaction.paymentType == 'bank'">
+                            <label class="col-md-4 control-label">To Bank</label>
+                            <label class="col-md-1">:</label>
+                            <div class="col-md-7 col-xs-11">
+                                <v-select v-bind:options="tobanks" v-model="selectedToBank" label="display_name"></v-select>
                             </div>
                         </div>
 
@@ -150,7 +160,9 @@
                             <td>{{ row.invoice }}</td>
                             <td>{{ row.date }}</td>
                             <td>{{ row.from_branch }}</td>
+                            <td>{{ row.from_bank }}</td>
                             <td>{{ row.to_branch }}</td>
+                            <td>{{ row.to_bank }}</td>
                             <td>{{ row.paymentType }}</td>
                             <td>{{ row.amount }}</td>
                             <td>{{ row.note }}</td>
@@ -160,14 +172,13 @@
                             </td>
                             <td>
                                 <button v-if="row.transfer_to == branchId && row.status == 'p'" type="button" @click="approveTransfer(row.id)" class="badge badge-warning">Approve</button>
-                                <?php if ($this->session->userdata('accountType') != 'u') { ?>
-                                    <button v-if="row.transfer_from == branchId" type="button" class="button edit" @click="editTransaction(row)">
-                                        <i class="fa fa-pencil"></i>
-                                    </button>
-                                    <button v-if="row.transfer_from == branchId" type="button" class="button" @click="deleteTransaction(row.id)">
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                <?php } ?>
+
+                                <button v-if="row.transfer_from == branchId && row.canEditDelete" type="button" class="button edit" @click="editTransaction(row)">
+                                    <i class="fa fa-pencil"></i>
+                                </button>
+                                <button v-if="row.transfer_from == branchId && row.canEditDelete" type="button" class="button" @click="deleteTransaction(row.id)">
+                                    <i class="fa fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>
@@ -205,7 +216,9 @@
                 branches: [],
                 selectedToBranch: null,
                 banks: [],
-                selectedBank: null,
+                selectedFromBank: null,
+                tobanks: [],
+                selectedToBank: null,
                 userType: '<?php echo $this->session->userdata("accountType"); ?>',
                 branchId: '<?= $this->session->userdata('BRANCHid'); ?>',
 
@@ -225,8 +238,18 @@
                         align: 'center'
                     },
                     {
+                        label: 'From Bank',
+                        field: 'from_bank',
+                        align: 'center'
+                    },
+                    {
                         label: 'Transfer To',
                         field: 'to_branch',
+                        align: 'center'
+                    },
+                    {
+                        label: 'To Bank',
+                        field: 'to_bank',
                         align: 'center'
                     },
                     {
@@ -234,6 +257,7 @@
                         field: 'paymentType',
                         align: 'center'
                     },
+
                     {
                         label: 'Amount',
                         field: 'amount',
@@ -262,7 +286,7 @@
         },
         created() {
             this.getBranches();
-            this.getBanks();
+            this.getFromBanks();
             this.getCashBalance();
             this.getTransactions();
         },
@@ -277,7 +301,7 @@
                     this.branches = res.data.filter(item => item.brunch_id != this.transaction.transfer_from);
                 })
             },
-            getBanks() {
+            getFromBanks() {
                 axios.get('/get_bank_accounts').then(res => {
                     this.banks = res.data.map(item => {
                         return {
@@ -286,6 +310,25 @@
                         }
                     });
                 })
+            },
+            getToBanks() {
+                axios.post('/get_bank_accounts', {
+                    branchId: this.selectedToBranch.brunch_id
+                }).then(res => {
+                    this.tobanks = res.data.map(item => {
+                        return {
+                            ...item,
+                            display_name: `${item.account_name} - ${item.account_number} (${item.bank_name})`
+                        }
+                    });
+                })
+            },
+            onChangeTransfer() {
+                this.getToBanks();
+            },
+            onChangePaymentType() {
+                this.selectedFromBank = null;
+                this.selectedToBank = null;
             },
             getTransactions() {
                 let data = {
@@ -303,7 +346,8 @@
                     return;
                 }
 
-                this.transaction.bank_id = this.selectedBank ? this.selectedBank.Bank_SlNo : null;
+                this.transaction.from_bank_id = this.selectedFromBank ? this.selectedFromBank.account_id : null;
+                this.transaction.to_bank_id = this.selectedToBank ? this.selectedToBank.account_id : null;
                 this.transaction.transfer_to = this.selectedToBranch ? this.selectedToBranch.brunch_id : null;
 
                 let url = '/add_cash_transfer';

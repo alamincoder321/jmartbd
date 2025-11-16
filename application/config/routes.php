@@ -223,6 +223,7 @@ $route['customerwiseSalesPrint'] = 'Administrator/Reports/customerwise_sales';
 $route['productwiseSales'] = 'Administrator/Sales/productwise_sales';
 $route['productwiseSalesPrint'] = 'Administrator/Reports/productwise_sales';
 $route['customerPaymentReport'] = 'Administrator/Customer/customer_payment_report';
+$route['customerPaymentReport/(:any)'] = 'Administrator/Customer/customer_payment_report/$1';
 $route['customerPaymentReportPrint'] = 'Administrator/Reports/customer_payment_print';
 $route['invoiceProductDetails'] = 'Administrator/Sales/invoice_product_list';
 $route['invoiceProductList'] = 'Administrator/Sales/invoice_product_list_search';

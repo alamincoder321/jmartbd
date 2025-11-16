@@ -72,6 +72,11 @@ class Customer extends CI_Controller
             order by c.Customer_SlNo desc
             $limit
         ", $this->session->userdata('BRANCHid'))->result();
+
+        foreach ($customers as $key => $customer) {
+            $customer->dueAmount = $this->mt->customerDue(" and c.Customer_SlNo = '$customer->Customer_SlNo'")[0]->dueAmount;
+        }
+
         echo json_encode($customers);
     }
 
@@ -118,6 +123,7 @@ class Customer extends CI_Controller
                 c.Customer_Code,
                 c.Customer_Name,
                 c.Customer_Mobile,
+                c.Customer_Type,
                 ba.account_name,
                 ba.account_number,
                 ba.bank_name,
@@ -137,6 +143,10 @@ class Customer extends CI_Controller
             and cp.CPayment_brunchid = ? $clauses
             order by cp.CPayment_id desc
         ", $this->session->userdata('BRANCHid'))->result();
+
+        foreach ($payments as $key => $payment) {
+            $payment->canEditDelete = checkEditDelete($this->session->userdata('accountType'), $payment->CPayment_AddDAte);
+        }
 
         echo json_encode($payments);
     }
@@ -546,15 +556,14 @@ class Customer extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    function customer_payment_report()
+    function customer_payment_report($customerId = "")
     {
         $access = $this->mt->userAccess();
         if (!$access) {
             redirect(base_url());
         }
+        $data['customerId'] = $customerId;
         $data['title'] = "Customer Payment Reports";
-        $branch_id = $this->session->userdata('BRANCHid');
-
         $data['content'] = $this->load->view('Administrator/payment_reports/customer_payment_report', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }

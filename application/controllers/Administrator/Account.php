@@ -20,7 +20,7 @@ class Account extends CI_Controller
         if (!$access) {
             redirect(base_url());
         }
-        $data['title'] = "Add Account";
+        $data['title'] = "Add Expense Account";
         $data['accountCode'] = $this->mt->generateAccountCode();
         $data['content'] = $this->load->view('Administrator/account/add_account', $data, TRUE);
         $this->load->view('Administrator/index', $data);
@@ -119,7 +119,7 @@ class Account extends CI_Controller
         if (!$access) {
             redirect(base_url());
         }
-        $data['title'] = "Cash Transaction";
+        $data['title'] = "Expense Entry";
         $data['transaction'] = $this->Billing_model->select_all_transaction();
         $data['accounts'] = $this->Other_model->get_all_account_info();
         $data['content'] = $this->load->view('Administrator/account/cash_transaction', $data, TRUE);
@@ -159,6 +159,10 @@ class Account extends CI_Controller
             $dateClause $transactionTypeClause $accountClause
             order by ct.Tr_SlNo desc
         ", $this->session->userdata('BRANCHid'))->result();
+
+        foreach ($transactions as $key => $transaction) {
+            $transaction->canEditDelete = checkEditDelete($this->session->userdata('accountType'), $transaction->AddTime);
+        }
 
         echo json_encode($transactions);
     }
@@ -232,7 +236,7 @@ class Account extends CI_Controller
         if (!$access) {
             redirect(base_url());
         }
-        $data['title'] = "Cash Transaction Report";
+        $data['title'] = "Expenses Report";
         $data['content'] = $this->load->view('Administrator/account/all_transaction_report', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
@@ -362,7 +366,7 @@ class Account extends CI_Controller
         echo json_encode($result);
     }
 
-    // Cash Transaction
+    // Internal Transfer
     public function cash_transfer()
     {
         $access = $this->mt->userAccess();
@@ -370,7 +374,7 @@ class Account extends CI_Controller
             redirect(base_url());
         }
         $data['invoice'] = $this->mt->generateCashTransferInvoice();
-        $data['title'] = "Cash Transfer";
+        $data['title'] = "Internal Transfer";
         $data['content'] = $this->load->view('Administrator/account/cash_transfer', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
@@ -389,18 +393,29 @@ class Account extends CI_Controller
                 ct.*,
                 bf.Brunch_name as from_branch,
                 bt.Brunch_name as to_branch,
-                ba.account_name,
-                ba.account_number,
-                ba.bank_name
+                fba.account_name as from_account_name,
+                fba.account_number as from_account_number,
+                fba.bank_name as from_bank_name,
+                concat_ws(' - ', fba.account_number, fba.bank_name) as from_bank,
+                tba.account_name as to_account_name,
+                tba.account_number as to_account_number,
+                tba.bank_name as to_bank_name,
+                concat_ws(' - ', tba.account_number, tba.bank_name) as to_bank
             from tbl_cash_transfer ct
             left join tbl_brunch bf on bf.brunch_id = ct.transfer_from
             left join tbl_brunch bt on bt.brunch_id = ct.transfer_to
-            left join tbl_bank_accounts ba on ba.account_id = ct.bank_id
+            left join tbl_bank_accounts fba on fba.account_id = ct.from_bank_id
+            left join tbl_bank_accounts tba on tba.account_id = ct.to_bank_id
             where ct.status != 'd'
             and (ct.transfer_to = ? or ct.transfer_from = ?)
             $clauses
             order by ct.id desc
         ", [$this->session->userdata('BRANCHid'), $this->session->userdata('BRANCHid')])->result();
+
+
+        foreach ($transactions as $key => $transaction) {
+            $transaction->canEditDelete = checkEditDelete($this->session->userdata('accountType'), $transaction->AddTime);
+        }
 
         echo json_encode($transactions);
     }
@@ -560,6 +575,11 @@ class Account extends CI_Controller
 
     public function getBankAccounts()
     {
+        $data = json_decode($this->input->raw_input_stream);
+        $branchId = $this->session->userdata('BRANCHid');
+        if (!empty($data->branchId)) {
+            $branchId = $data->branchId;
+        }
         $accounts = $this->db->query("
             select 
             *,
@@ -569,7 +589,7 @@ class Account extends CI_Controller
             end as status_text
             from tbl_bank_accounts 
             where branch_id = ?
-        ", $this->session->userdata('BRANCHid'))->result();
+        ", $branchId)->result();
         echo json_encode($accounts);
     }
 
@@ -678,6 +698,10 @@ class Account extends CI_Controller
             $accountClause $dateClause $typeClause
             order by bt.transaction_id desc
         ", $this->session->userdata('BRANCHid'))->result();
+
+        foreach ($transactions as $key => $transaction) {
+            $transaction->canEditDelete = checkEditDelete($this->session->userdata('accountType'), $transaction->saved_datetime);
+        }
 
         echo json_encode($transactions);
     }

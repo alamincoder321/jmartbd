@@ -777,7 +777,21 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 									<i class="menu-icon fa fa-medkit"></i>
 								</div>
 								<div class="textModule">
-									Cash Transaction
+									Expense Entry
+								</div>
+							</a>
+						</div>
+					</div>
+				<?php endif; ?>
+				<?php if (array_search("cash_transfer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+					<div class="col-md-2 col-xs-6 custom-padding ">
+						<div class="col-md-12 section20">
+							<a href="<?php echo base_url(); ?>cash_transfer">
+								<div class="logo">
+									<i class="menu-icon fa fa-exchange"></i>
+								</div>
+								<div class="textModule">
+									Internal Transfer
 								</div>
 							</a>
 						</div>
@@ -847,7 +861,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 									<i class="menu-icon fa fa-plus-square-o"></i>
 								</div>
 								<div class="textModule" style="line-height: 13px; margin-top: 0;">
-									Transaction Accounts
+									Expense Account
 								</div>
 							</a>
 						</div>
@@ -961,7 +975,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 									<i class="menu-icon fa fa-th-list"></i>
 								</div>
 								<div class="textModule" style="line-height: 13px; margin-top: 0;">
-									Cash Transaction Report
+									Expenses Report
 								</div>
 							</a>
 						</div>
@@ -1434,7 +1448,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 									<i class="menu-icon fa fa-money"></i>
 								</div>
 								<div class="textModule" style="line-height: 13px; margin-top: 0;">
-									Cash Transaction Report
+									Expenses Report
 								</div>
 							</a>
 						</div>

@@ -158,14 +158,12 @@
 							<td>{{ row.SPayment_notes }}</td>
 							<td>{{ row.SPayment_Addby }}</td>
 							<td>
-								<?php if($this->session->userdata('accountType') != 'u'){?>
-								<button type="button" class="button edit" @click="editPayment(row)">
+								<button v-if="row.canEditDelete" type="button" class="button edit" @click="editPayment(row)">
 									<i class="fa fa-pencil"></i>
 								</button>
-								<button type="button" class="button" @click="deletePayment(row.SPayment_id)">
+								<button v-if="row.canEditDelete" type="button" class="button" @click="deletePayment(row.SPayment_id)">
 									<i class="fa fa-trash"></i>
 								</button>
-								<?php }?>
 							</td>
 						</tr>
 					</template>

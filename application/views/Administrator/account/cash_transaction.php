@@ -77,8 +77,7 @@
 							<label class="col-md-4 control-label">Account</label>
 							<label class="col-md-1">:</label>
 							<div class="col-md-6 col-xs-11">
-								<select class="form-control" v-if="accounts.length == 0"></select>
-								<v-select v-bind:options="accounts" v-model="selectedAccount" label="Acc_Name" v-if="accounts.length > 0"></v-select>
+								<v-select v-bind:options="accounts" v-model="selectedAccount" label="Acc_Name"></v-select>
 							</div>
 							<div class="col-xs-1" style="padding-left:0;margin-left: -3px;">
 								<a href="/account" target="_blank" class="add-button"><i class="fa fa-plus"></i></a>
@@ -148,14 +147,12 @@
 							<td>{{ row.Out_Amount }}</td>
 							<td>{{ row.AddBy }}</td>
 							<td>
-								<?php if($this->session->userdata('accountType') != 'u'){?>
-								<button type="button" class="button edit" @click="editTransaction(row)">
+								<button v-if="row.canEditDelete" type="button" class="button edit" @click="editTransaction(row)">
 									<i class="fa fa-pencil"></i>
 								</button>
-								<button type="button" class="button" @click="deleteTransaction(row.Tr_SlNo)">
+								<button v-if="row.canEditDelete" type="button" class="button" @click="deleteTransaction(row.Tr_SlNo)">
 									<i class="fa fa-trash"></i>
 								</button>
-								<?php }?>
 							</td>
 						</tr>
 					</template>
@@ -183,7 +180,7 @@
 					Tr_SlNo: 0,
 					Tr_Id: null,
 					Tr_date: moment().format('YYYY-MM-DD'),
-					Tr_Type: '',
+					Tr_Type: 'Out Cash',
 					Tr_account_Type: '',
 					Acc_SlID: null,
 					Tr_Description: '',

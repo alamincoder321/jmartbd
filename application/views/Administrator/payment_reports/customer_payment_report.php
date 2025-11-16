@@ -1,29 +1,36 @@
 <style>
-	.v-select{
+	.v-select {
 		margin-bottom: 5px;
 	}
-	.v-select .dropdown-toggle{
+
+	.v-select .dropdown-toggle {
 		padding: 0px;
 	}
-	.v-select input[type=search], .v-select input[type=search]:focus{
+
+	.v-select input[type=search],
+	.v-select input[type=search]:focus {
 		margin: 0px;
 	}
-	.v-select .vs__selected-options{
+
+	.v-select .vs__selected-options {
 		overflow: hidden;
-		flex-wrap:nowrap;
+		flex-wrap: nowrap;
 	}
-	.v-select .selected-tag{
+
+	.v-select .selected-tag {
 		margin: 2px 0px;
 		white-space: nowrap;
-		position:absolute;
+		position: absolute;
 		left: 0px;
 	}
-	.v-select .vs__actions{
-		margin-top:-5px;
+
+	.v-select .vs__actions {
+		margin-top: -5px;
 	}
-	.v-select .dropdown-menu{
+
+	.v-select .dropdown-menu {
 		width: auto;
-		overflow-y:auto;
+		overflow-y: auto;
 	}
 </style>
 <div class="row" id="customerPaymentReport">
@@ -99,40 +106,44 @@
 	</div>
 </div>
 
-<script src="<?php echo base_url();?>assets/js/vue/vue.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/axios.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vue-select.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/moment.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/axios.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue-select.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/moment.min.js"></script>
 
 <script>
 	Vue.component('v-select', VueSelect.VueSelect);
 	new Vue({
 		el: '#customerPaymentReport',
-		data(){
+		data() {
 			return {
+				customerId: "<?= $customerId; ?>",
 				customers: [],
 				selectedCustomer: null,
-				dateFrom: null,
-				dateTo: null,
+				dateFrom: moment().format('YYYY-MM-DD'),
+				dateTo: moment().format('YYYY-MM-DD'),
 				payments: [],
-				previousBalance: 0.00,
-				showTable: false
+				previousBalance: 0,
+				showTable: false,
 			}
 		},
-		created(){
-			let today = moment().format('YYYY-MM-DD');
-			this.dateTo = today;
-			this.dateFrom = moment().format('YYYY-MM-DD');
-			this.getCustomers();
+		async created() {
+			await this.getCustomers();
+			if (this.customerId != "") {
+				setTimeout(() => {
+					this.selectedCustomer = this.customers.find(item => item.Customer_SlNo == this.customerId);
+					this.getReport();
+				}, 2000);
+			}
 		},
-		methods:{
-			getCustomers(){
+		methods: {
+			getCustomers() {
 				axios.get('/get_customers').then(res => {
 					this.customers = res.data;
 				})
 			},
-			getReport(){
-				if(this.selectedCustomer == null){
+			getReport() {
+				if (this.selectedCustomer == null) {
 					alert('Select customer');
 					return;
 				}
@@ -148,7 +159,7 @@
 					this.showTable = true;
 				})
 			},
-			async print(){
+			async print() {
 				let reportContent = `
 					<div class="container">
 						<h4 style="text-align:center">Customer payment report</h4 style="text-align:center">
@@ -175,7 +186,7 @@
 
 				var mywindow = window.open('', 'PRINT', `width=${screen.width}, height=${screen.height}`);
 				mywindow.document.write(`
-					<?php $this->load->view('Administrator/reports/reportHeader.php');?>
+					<?php $this->load->view('Administrator/reports/reportHeader.php'); ?>
 				`);
 
 				mywindow.document.body.innerHTML += reportContent;

@@ -25,50 +25,6 @@ class Supplier extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    public function supplier_country()
-    {
-        $this->load->view('Administrator/supplier_country');
-    }
-    public function insert_country()
-    {
-        $mail = $this->input->post('add_country');
-        $query = $this->db->query("SELECT CountryName from tbl_country where CountryName = '$mail'");
-
-        if ($query->num_rows() > 0) {
-            $data['exists'] = "This Name is Already Exists";
-            $this->load->view('Administrator/ajax/sup_country', $data);
-        } else {
-            $data = array(
-                "CountryName"          => $this->input->post('add_country', TRUE),
-                "AddBy"                  => $this->session->userdata("FullName"),
-                "AddTime"                => date("Y-m-d H:i:s")
-            );
-            $this->mt->save_data('tbl_country', $data);
-            $this->load->view('Administrator/ajax/sup_country');
-        }
-    }
-    public function supplier_district()
-    {
-        $this->load->view('Administrator/supplier_district');
-    }
-    public function insert_district()
-    {
-        $mail = $this->input->post('District');
-        $query = $this->db->query("SELECT District_Name from tbl_district where District_Name = '$mail'");
-
-        if ($query->num_rows() > 0) {
-            $data['exists'] = "This Name is Already Exists";
-            $this->load->view('Administrator/ajax/supplier_district', $data);
-        } else {
-            $data = array(
-                "District_Name"          => $this->input->post('District', TRUE),
-                "AddBy"                  => $this->session->userdata("FullName"),
-                "AddTime"                => date("Y-m-d H:i:s")
-            );
-            $this->mt->save_data('tbl_district', $data);
-            $this->load->view('Administrator/ajax/supplier_district');
-        }
-    }
     public function addSupplier()
     {
         $res = ['success' => false, 'message' => ''];
@@ -586,6 +542,10 @@ class Supplier extends CI_Controller
             and sp.SPayment_brunchid = ? $paymentTypeClause $dateClause
             order by sp.SPayment_id desc
         ", $this->session->userdata('BRANCHid'))->result();
+
+        foreach ($payments as $payment) {
+            $payment->canEditDelete = checkEditDelete($this->session->userdata('accountType'), $payment->SPayment_AddDAte);
+        }
 
         echo json_encode($payments);
     }

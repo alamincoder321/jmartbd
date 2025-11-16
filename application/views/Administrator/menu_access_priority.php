@@ -49,12 +49,12 @@
             <div class="group">
                 <input type="checkbox" id="accounts" class="group-head" @click="onClickGroupHeads"> <strong>Accounts</strong>
                 <ul ref="accounts">
-                    <li><input type="checkbox" class="access" value="cashTransaction" v-model="access"> Cash Transactions</li>
+                    <li><input type="checkbox" class="access" value="cashTransaction" v-model="access"> Expense Entry</li>
                     <li><input type="checkbox" class="access" value="bank_transactions" v-model="access"> Bank Transactions</li>
                     <li><input type="checkbox" class="access" value="customerPaymentPage" v-model="access"> Customer Payment</li>
                     <li><input type="checkbox" class="access" value="supplierPayment" v-model="access"> Supplier Payment</li>
                     <li><input type="checkbox" class="access" value="cash_view" v-model="access"> Cash View</li>
-                    <li><input type="checkbox" class="access" value="account" v-model="access"> Transaction Accounts</li>
+                    <li><input type="checkbox" class="access" value="account" v-model="access"> Expense Account</li>
                     <li><input type="checkbox" class="access" value="bank_accounts" v-model="access"> Bank Accounts</li>
                     <li><input type="checkbox" class="access" value="check/entry" v-model="access"> New Cheque Entry</li>
                     <li><input type="checkbox" class="access" value="check/list" v-model="access"> Cheque List</li>
@@ -90,7 +90,7 @@
             <div class="group">
                 <input type="checkbox" id="accountsReports" class="group-head" @click="onClickGroupHeads"> <strong>Accounts Reports</strong>
                 <ul ref="accountsReports">
-                    <li><input type="checkbox" class="access" value="TransactionReport" v-model="access"> Cash Transaction Report</li>
+                    <li><input type="checkbox" class="access" value="TransactionReport" v-model="access"> Expenses Report</li>
                     <li><input type="checkbox" class="access" value="bank_transaction_report" v-model="access"> Bank Transaction Report</li>
                     <li><input type="checkbox" class="access" value="cash_ledger" v-model="access"> Cash Ledger</li>
                     <li><input type="checkbox" class="access" value="bank_ledger" v-model="access"> Bank Ledger</li>

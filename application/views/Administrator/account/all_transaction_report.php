@@ -185,7 +185,7 @@
                 }
                 let printContent = `
                     <div class="container">
-                        <h4 style="text-align:center">Cash Transaction Report</h4 style="text-align:center">
+                        <h4 style="text-align:center">Expenses Report</h4 style="text-align:center">
                         <div class="row">
                             <div class="col-xs-6 col-xs-offset-6 text-right">
                                 ${dateText}

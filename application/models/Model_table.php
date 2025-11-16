@@ -827,7 +827,7 @@ class Model_Table extends CI_Model
                 " . ($date == null ? "" : " and sm.SaleMaster_SaleDate < '$date'") . "
                 and sm.Status = 'a') as invoicePaid,
 
-            (select ifnull(sum(cp.CPayment_amount), 0.00) 
+            (select ifnull(sum(cp.CPayment_amount + cp.discount), 0.00) 
                 from tbl_customer_payment cp 
                 where cp.CPayment_customerID = c.Customer_SlNo 
                 and cp.CPayment_TransactionType = 'CR'

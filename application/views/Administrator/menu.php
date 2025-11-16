@@ -704,17 +704,17 @@ if ($module == 'dashboard' or $module == '') {
 			<li class="">
 				<a href="<?php echo base_url(); ?>cashTransaction">
 					<i class="menu-icon fa fa-medkit"></i>
-					<span class="menu-text"> Cash Transaction </span>
+					<span class="menu-text"> Expense Entry </span>
 				</a>
 				<b class="arrow"></b>
 			</li>
 		<?php endif; ?>
 
-		<?php if (array_search("cashTransaction", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+		<?php if (array_search("cash_transfer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
 			<li class="">
 				<a href="<?php echo base_url(); ?>cash_transfer">
 					<i class="menu-icon fa fa-exchange"></i>
-					<span class="menu-text"> Cash Transfer </span>
+					<span class="menu-text"> Internal Transfer </span>
 				</a>
 				<b class="arrow"></b>
 			</li>
@@ -927,7 +927,7 @@ if ($module == 'dashboard' or $module == '') {
 						<li>
 							<a href="<?php echo base_url(); ?>account">
 								<i class="menu-icon fa fa-caret-right"></i>
-								Transaction Accounts
+								Expense Account
 							</a>
 							<b class="arrow"></b>
 						</li>
@@ -1055,7 +1055,7 @@ if ($module == 'dashboard' or $module == '') {
 						<li class="">
 							<a href="<?php echo base_url(); ?>TransactionReport">
 								<i class="menu-icon fa fa-caret-right"></i>
-								Cash Transaction Report
+								Expenses Report
 							</a>
 							<b class="arrow"></b>
 						</li>
@@ -1337,7 +1337,7 @@ if ($module == 'dashboard' or $module == '') {
 						<li class="">
 							<a href="<?php echo base_url(); ?>TransactionReport">
 								<i class="menu-icon fa fa-caret-right"></i>
-								Cash Transaction Report
+								Expenses Report
 							</a>
 							<b class="arrow"></b>
 						</li>
