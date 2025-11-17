@@ -338,6 +338,14 @@ class Model_Table extends CI_Model
                 " . ($date == null ? "" : " and ass.as_date < '$date'") . "
             ) as sale_asset,
 
+            (
+                select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
+                where ctf.paymentType = 'cash'
+                and ctf.status = 'a'
+                " . (!empty($branchId) ? "and ctf.transfer_to = '$branchId'" : "") . "
+                " . ($date == null ? "" : " and ctf.date < '$date'") . "
+            ) as transferTo,
+
             /* paid */
             (
                 select ifnull(sum(pm.PurchaseMaster_PaidAmount), 0) from tbl_purchasemaster pm
@@ -402,12 +410,19 @@ class Model_Table extends CI_Model
                 and ass.buy_or_sale = 'buy'
                 " . ($date == null ? "" : " and ass.as_date < '$date'") . "
             ) as buy_asset,
+            (
+                select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
+                where ctf.paymentType = 'cash'
+                and ctf.status = 'a'
+                " . (!empty($branchId) ? "and ctf.transfer_from = '$branchId'" : "") . "
+                " . ($date == null ? "" : " and ctf.date < '$date'") . "
+            ) as transferFrom,
             /* total */
             (
-                select received_sales + exchange_sales + received_customer + received_supplier + received_cash + bank_withdraw + loan_received + loan_initial_balance + invest_received + sale_asset
+                select received_sales + exchange_sales + received_customer + received_supplier + received_cash + bank_withdraw + loan_received + loan_initial_balance + invest_received + sale_asset + transferTo
             ) as total_in,
             (
-                select paid_purchase + paid_customer + paid_supplier + paid_cash + bank_deposit + employee_payment + loan_payment + invest_payment + buy_asset
+                select paid_purchase + paid_customer + paid_supplier + paid_cash + bank_deposit + employee_payment + loan_payment + invest_payment + buy_asset + transferFrom
             ) as total_out,
             (
                 select total_in - total_out
@@ -496,7 +511,23 @@ class Model_Table extends CI_Model
                     " . ($date == null ? "" : " and sp.SPayment_date < '$date'") . "
                 ) as total_received_from_supplier,
                 (
-                    select (ba.initial_balance + total_deposit + sale_receive + exchange_sales + total_received_from_customer + total_received_from_supplier) - (total_withdraw + total_paid_to_customer + total_paid_to_supplier)
+                    select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
+                    where ctf.paymentType = 'bank'
+                    and ctf.from_bank_id = ba.account_id
+                    and ctf.status = 'a'
+                    " . (!empty($branchId) ? "and ctf.transfer_from = '$branchId'" : "") . "
+                    " . ($date == null ? "" : " and ctf.date < '$date'") . "
+                ) as transferFrom,
+                (
+                    select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
+                    where ctf.paymentType = 'bank'
+                    and ctf.to_bank_id = ba.account_id
+                    and ctf.status = 'a'
+                    " . (!empty($branchId) ? "and ctf.transfer_to = '$branchId'" : "") . "
+                    " . ($date == null ? "" : " and ctf.date < '$date'") . "
+                ) as transferTo,
+                (
+                    select (ba.initial_balance + total_deposit + sale_receive + exchange_sales + total_received_from_customer + total_received_from_supplier + transferTo) - (total_withdraw + total_paid_to_customer + total_paid_to_supplier + transferFrom)
                 ) as balance
             from tbl_bank_accounts ba
             where 1 = 1
@@ -827,10 +858,21 @@ class Model_Table extends CI_Model
                 " . ($date == null ? "" : " and sm.SaleMaster_SaleDate < '$date'") . "
                 and sm.Status = 'a') as invoicePaid,
 
-            (select ifnull(sum(cp.CPayment_amount + cp.discount), 0.00) 
-                from tbl_customer_payment cp 
+            (select ifnull(sum(dueBalance), 0.00) 
+                from tbl_customer_payment cp
+                left join tbl_customer c2 on c2.Customer_SlNo = cp.CPayment_customerID 
                 where cp.CPayment_customerID = c.Customer_SlNo 
                 and cp.CPayment_TransactionType = 'CR'
+                and (c2.Customer_Type = 'DSO' or c2.Customer_Type = 'wholesale')
+                " . ($date == null ? "" : " and cp.CPayment_date < '$date'") . "
+                and cp.CPayment_status = 'a') as dsowholesaleReceived,
+
+            (select ifnull(sum(cp.CPayment_amount + cp.discount), 0.00) 
+                from tbl_customer_payment cp
+                left join tbl_customer c2 on c2.Customer_SlNo = cp.CPayment_customerID 
+                where cp.CPayment_customerID = c.Customer_SlNo 
+                and cp.CPayment_TransactionType = 'CR'
+                and (c2.Customer_Type = 'DSR' or c2.Customer_Type = 'Client' or c2.Customer_Type = 'retail')
                 " . ($date == null ? "" : " and cp.CPayment_date < '$date'") . "
                 and cp.CPayment_status = 'a') as cashReceived,
 
@@ -843,14 +885,14 @@ class Model_Table extends CI_Model
 
             (select ifnull(sum(sr.SaleReturn_ReturnAmount), 0.00) 
                 from tbl_salereturn sr 
-                join tbl_salesmaster smr on smr.SaleMaster_InvoiceNo = sr.SaleMaster_InvoiceNo 
+                join tbl_salesmaster smr on smr.SaleMaster_InvoiceNo = sr.SaleMaster_InvoiceNo
                 where smr.SalseCustomer_IDNo = c.Customer_SlNo 
                 " . ($date == null ? "" : " and sr.SaleReturn_ReturnDate < '$date'") . "
             ) as returnedAmount,
 
             (select invoicePaid + cashReceived) as paidAmount,
 
-            (select (billAmount + paidOutAmount) - (paidAmount + returnedAmount)) as dueAmount
+            (select (billAmount + dsowholesaleReceived + paidOutAmount) - (paidAmount + returnedAmount)) as dueAmount
             
             from tbl_customer c
             where c.status = 'a'

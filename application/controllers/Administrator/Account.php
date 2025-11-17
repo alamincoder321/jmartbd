@@ -916,6 +916,54 @@ class Account extends CI_Controller
                 and sp.SPayment_status = 'a'
                 and sp.SPayment_TransactionType = 'CR'
                 and sp.SPayment_brunchid = " . $this->session->userdata('BRANCHid') . "
+                
+                UNION
+                select 
+                    'i' as sequence,
+                    ctf.id as id,
+                    concat('Transfer To - (', b.Brunch_name, ')') as description,  
+                    ctf.from_bank_id as account_id,
+                    ctf.date as transaction_date,
+                    'withdraw' as transaction_type,
+                    0 as deposit,
+                    ctf.amount as withdraw,
+                    ctf.note as note,
+                    ac.account_name,
+                    ac.account_number,
+                    ac.bank_name,
+                    ac.branch_name,
+                    0.00 as balance
+                from tbl_cash_transfer ctf
+                join tbl_bank_accounts ac on ac.account_id = ctf.from_bank_id
+                left join tbl_brunch b on b.brunch_id = ctf.transfer_to
+                where ctf.from_bank_id is not null
+                and ctf.status = 'a'
+                and ctf.paymentType = 'bank'
+                and ctf.transfer_from = " . $this->session->userdata('BRANCHid') . "
+                
+                UNION
+                select 
+                    'j' as sequence,
+                    ctf.id as id,
+                    concat('Transfer From - (', b.Brunch_name, ')') as description, 
+                    ctf.to_bank_id as account_id,
+                    ctf.date as transaction_date,
+                    'deposit' as transaction_type,
+                    ctf.amount as deposit,
+                    0 as withdraw,
+                    ctf.note as note,
+                    ac.account_name,
+                    ac.account_number,
+                    ac.bank_name,
+                    ac.branch_name,
+                    0.00 as balance
+                from tbl_cash_transfer ctf
+                join tbl_bank_accounts ac on ac.account_id = ctf.from_bank_id
+                left join tbl_brunch b on b.brunch_id = ctf.transfer_from
+                where ctf.to_bank_id is not null
+                and ctf.status = 'a'
+                and ctf.paymentType = 'bank'
+                and ctf.transfer_to = " . $this->session->userdata('BRANCHid') . "
             ) as tbl
             where 1 = 1 $clauses
             order by $order
@@ -1095,8 +1143,7 @@ class Account extends CI_Controller
             and sp.SPayment_brunchid = '$this->brunch'
             and sp.SPayment_date between '$data->fromDate' and '$data->toDate'
             
-            UNION
-            
+            UNION            
             select 
                 ct.Tr_SlNo as id,
                 ct.Tr_date as date,
@@ -1125,8 +1172,7 @@ class Account extends CI_Controller
             and bt.transaction_type = 'withdraw'
             and bt.transaction_date between '$data->fromDate' and '$data->toDate'
             
-            UNION
-            
+            UNION            
             select 
                 bt.transaction_id as id,
                 bt.transaction_date as date,
@@ -1179,6 +1225,20 @@ class Account extends CI_Controller
             and ass.status = 'a'
             and ass.buy_or_sale = 'sale'
             and ass.as_date between '$data->fromDate' and '$data->toDate'
+
+            UNION            
+            select 
+                ctf.id as id,
+                ctf.date as date,
+                concat('Transfer From - (', b.Brunch_name,')') as description,
+                ctf.amount as in_amount,
+                0.00 as out_amount
+            from tbl_cash_transfer ctf
+            left join tbl_brunch b on b.brunch_id = ctf.transfer_from
+            where ctf.status = 'a'
+            and ctf.transfer_to = '$this->brunch'
+            and ctf.paymentType = 'cash'
+            and ctf.date between '$data->fromDate' and '$data->toDate'
             
             /* Cash out */
             
@@ -1316,6 +1376,20 @@ class Account extends CI_Controller
             and ass.buy_or_sale = 'buy'
             and ass.as_date between '$data->fromDate' and '$data->toDate'
 
+            UNION            
+            select 
+                ctf.id as id,
+                ctf.date as date,
+                concat('Transfer To - (', b.Brunch_name,')') as description,
+                0 as in_amount,
+                ctf.amount as out_amount
+            from tbl_cash_transfer ctf
+            left join tbl_brunch b on b.brunch_id = ctf.transfer_to
+            where ctf.status = 'a'
+            and ctf.transfer_from = '$this->brunch'
+            and ctf.paymentType = 'cash'
+            and ctf.date between '$data->fromDate' and '$data->toDate'
+
             order by date, id
         ")->result();
 
@@ -1325,7 +1399,7 @@ class Account extends CI_Controller
         }, array_keys($ledger), $ledger);
 
         $res['previousBalance'] = $previousBalance;
-        $res['ledger'] = $ledger;
+        $res['ledger'] = array_values($ledger);
 
         echo json_encode($res);
     }

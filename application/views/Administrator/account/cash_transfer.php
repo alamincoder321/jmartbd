@@ -107,7 +107,7 @@
                             <label class="col-md-4 control-label">From Bank</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7 col-xs-11">
-                                <v-select v-bind:options="banks" v-model="selectedFromBank" label="display_name"></v-select>
+                                <v-select v-bind:options="banks" v-model="selectedFromBank" label="display_name" @input="onChangeFromBank"></v-select>
                             </div>
                         </div>
 
@@ -281,19 +281,25 @@
                 ],
                 page: 1,
                 per_page: 10,
-                filter: ''
+                filter: '',
+                bank_balances: []
             }
         },
         created() {
             this.getBranches();
             this.getFromBanks();
-            this.getCashBalance();
             this.getTransactions();
+            this.onChangePaymentType();
         },
         methods: {
             getCashBalance() {
                 axios.get('/get_cash_and_bank_balance').then(res => {
                     this.transaction.previous_balance = res.data.cashBalance.cash_balance;
+                })
+            },
+            getBankBalance() {
+                axios.get('/get_cash_and_bank_balance').then(res => {                    
+                    this.bank_balances = res.data.bankBalance;
                 })
             },
             getBranches() {
@@ -329,6 +335,19 @@
             onChangePaymentType() {
                 this.selectedFromBank = null;
                 this.selectedToBank = null;
+                this.transaction.previous_balance = 0;
+                if(this.transaction.paymentType == 'cash') {
+                    this.getCashBalance();
+                } else {
+                    this.getBankBalance();
+                }
+            },
+            onChangeFromBank(){
+                if(this.selectedFromBank) {
+                    this.transaction.previous_balance = this.bank_balances.filter(item => item.account_id == this.selectedFromBank.account_id)[0].balance;
+                } else {
+                    this.transaction.previous_balance = 0;
+                }
             },
             getTransactions() {
                 let data = {

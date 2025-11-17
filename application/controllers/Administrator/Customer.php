@@ -108,6 +108,10 @@ class Customer extends CI_Controller
         if (isset($data->paymentType) && $data->paymentType != '' && $data->paymentType == 'paid') {
             $clauses .= " and cp.CPayment_TransactionType = 'CP'";
         }
+        
+        if (isset($data->reportType) && $data->reportType != '' && $data->reportType == 'claim') {
+            $clauses .= " and cp.gross_sale > 0";
+        }
 
         if (isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != '') {
             $clauses .= " and cp.CPayment_date between '$data->dateFrom' and '$data->dateTo'";
@@ -472,6 +476,32 @@ class Customer extends CI_Controller
                         else 'Cash'
                     end, ' ', cp.CPayment_notes
                 ) as description,
+                cp.dueBalance as bill,
+                0 as paid,
+                0.00 as due,
+                0.00 as returned,
+                0.00 as paid_out,
+                0.00 as balance
+            from tbl_customer_payment cp
+            left join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
+            left join tbl_bank_accounts ba on ba.account_id = cp.account_id
+            where cp.CPayment_TransactionType = 'CR'
+            and (c.Customer_Type = 'DSO' or c.Customer_Type = 'wholesale')
+            and cp.CPayment_customerID = '$data->customerId'
+            and cp.CPayment_status = 'a'
+            
+            UNION
+            select
+                'c' as sequence,
+                cp.CPayment_id as id,
+                cp.CPayment_date as date,
+                concat('Received - ', 
+                    case cp.CPayment_Paymentby
+                        when 'bank' then concat('Bank - ', ba.account_name, ' - ', ba.account_number, ' - ', ba.bank_name)
+                        when 'By Cheque' then 'Cheque'
+                        else 'Cash'
+                    end, ' ', cp.CPayment_notes
+                ) as description,
                 0.00 as bill,
                 cp.CPayment_amount as paid,
                 0.00 as due,
@@ -479,14 +509,16 @@ class Customer extends CI_Controller
                 0.00 as paid_out,
                 0.00 as balance
             from tbl_customer_payment cp
+            left join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
             left join tbl_bank_accounts ba on ba.account_id = cp.account_id
             where cp.CPayment_TransactionType = 'CR'
+            and (c.Customer_Type = 'DSR' or c.Customer_Type = 'retail' or c.Customer_Type = 'Client')
             and cp.CPayment_customerID = '$data->customerId'
             and cp.CPayment_status = 'a'
 
             UNION
             select
-                'c' as sequence,
+                'd' as sequence,
                 cp.CPayment_id as id,
                 cp.CPayment_date as date,
                 concat('Paid - ', 
@@ -509,7 +541,7 @@ class Customer extends CI_Controller
             
             UNION
             select
-                'd' as sequence,
+                'e' as sequence,
                 sr.SaleReturn_SlNo as id,
                 sr.SaleReturn_ReturnDate as date,
                 'Sales return' as description,

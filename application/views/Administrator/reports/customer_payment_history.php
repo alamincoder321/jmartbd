@@ -59,6 +59,14 @@
 				</div>
 
 				<div class="form-group">
+					<label>Report Type</label>
+					<select class="form-control" v-model="reportType" @change="payments = []">
+						<option value="">All</option>
+						<option value="claim">Claim</option>
+					</select>
+				</div>
+
+				<div class="form-group">
 					<input type="date" class="form-control" v-model="dateFrom">
 				</div>
 
@@ -79,7 +87,7 @@
                 <i class="fa fa-print"></i> Print
             </a>
             <div class="table-responsive" id="reportTable">
-                <table class="table table-bordered">
+                <table class="table table-bordered table-hover" style="display: none;" :style="{display: reportType == 'claim' ? 'none' : ''}">
                     <thead>
                         <tr>
                             <th style="text-align:center">Transaction Id</th>
@@ -101,13 +109,51 @@
 							<td style="text-align:left;">{{ payment.CPayment_notes }}</td>
 							<td style="text-align:right;">{{ payment.CPayment_amount }}</td>
                         </tr>
+						<tr v-if="paymentType != ''">
+							<td colspan="6" style="text-align:right;">Total</td>
+							<td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.CPayment_amount)}, 0).toFixed(2) }}</td>
+						</tr>
                     </tbody>
-                    <tfoot v-if="paymentType != ''">
+                </table>
+                <table class="table table-bordered table-hover" style="display: none;" :style="{display: reportType == 'claim' ? '' : 'none'}">
+                    <thead>
                         <tr>
-                            <td colspan="6" style="text-align:right;">Total</td>
-                            <td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.CPayment_amount)}, 0).toFixed(2) }}</td>
+                            <th style="text-align:center">TrxId</th>
+                            <th style="text-align:center">Date</th>
+                            <th style="text-align:center">Customer</th>
+                            <th style="text-align:center">TrxType</th>
+                            <th style="text-align:center">Payment Method</th>
+                            <th style="text-align:center">Description</th>
+                            <th style="text-align:center">G.Sale</th>
+                            <th style="text-align:center">N.Sale</th>
+                            <th style="text-align:center">Discount</th>
+                            <th style="text-align:center">Cash Amount</th>
+                            <th style="text-align:center">Claim Amount</th>
                         </tr>
-                    </tfoot>
+                    </thead>
+                    <tbody>
+                        <tr v-for="payment in payments">
+                            <td style="text-align:left;">{{ payment.CPayment_invoice }}</td>
+							<td style="text-align:left;">{{ payment.CPayment_date }}</td>
+							<td style="text-align:left;">{{ payment.Customer_Code }} - {{ payment.Customer_Name }}</td>
+							<td style="text-align:left;">{{ payment.transaction_type }}</td>
+							<td style="text-align:left;">{{ payment.payment_by }}</td>
+							<td style="text-align:left;">{{ payment.CPayment_notes }}</td>
+							<td style="text-align:right;">{{ payment.gross_sale }}</td>
+							<td style="text-align:right;">{{ payment.net_sale }}</td>
+							<td style="text-align:right;">{{ payment.discount }}</td>
+							<td style="text-align:right;">{{ payment.CPayment_amount }}</td>
+							<td style="text-align:right;">{{ payment.claim_amount }}</td>
+                        </tr>
+						<tr style="font-weight: 700;" v-if="paymentType != ''">
+							<td colspan="6" style="text-align:right;">Total</td>
+							<td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.gross_sale)}, 0).toFixed(2) }}</td>
+							<td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.net_sale)}, 0).toFixed(2) }}</td>
+							<td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.discount)}, 0).toFixed(2) }}</td>
+							<td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.CPayment_amount)}, 0).toFixed(2) }}</td>
+							<td style="text-align:right;">{{ payments.reduce((p, c) => { return p + parseFloat(c.claim_amount)}, 0).toFixed(2) }}</td>
+						</tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -127,15 +173,14 @@
 			return {
 				customers: [],
 				selectedCustomer: null,
-				dateFrom: null,
-                dateTo: null,
+				reportType: '',
                 paymentType: 'received',
+				dateFrom: moment().format('YYYY-MM-DD'),
+                dateTo: moment().format('YYYY-MM-DD'),
 				payments: []
 			}
 		},
 		created(){
-			this.dateFrom = moment().format('YYYY-MM-DD');
-			this.dateTo = moment().format('YYYY-MM-DD');
 			this.getCustomers();
 		},
 		methods:{
@@ -149,7 +194,8 @@
 					dateFrom: this.dateFrom,
 					dateTo: this.dateTo,
                     customerId: this.selectedCustomer == null ? null : this.selectedCustomer.Customer_SlNo,
-                    paymentType: this.paymentType
+                    paymentType: this.paymentType,
+					reportType: this.reportType
 				}
 
 				axios.post('/get_customer_payments', data).then(res => {
