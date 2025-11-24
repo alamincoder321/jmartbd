@@ -294,7 +294,7 @@ class Products extends CI_Controller
     public function getProductStock()
     {
         $inputs = json_decode($this->input->raw_input_stream);
-        $stock = $this->mt->productStock($inputs->productId, $inputs->isPackage);
+        $stock = $this->mt->productStock($inputs->productId, $inputs->isPackage ?? false);
         echo $stock;
     }
 
