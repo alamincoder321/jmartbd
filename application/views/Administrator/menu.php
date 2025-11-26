@@ -479,6 +479,13 @@ if ($module == 'dashboard' or $module == '') {
 			</li>
 		<?php endif; ?>
 
+		<li class="">
+			<a href="<?php echo base_url(); ?>hold_sale_list">
+				<i class="menu-icon fa fa-list"></i>
+				<span class="menu-text"> Hold List </span>
+			</a>
+			<b class="arrow"></b>
+		</li>
 
 
 		<li class="">

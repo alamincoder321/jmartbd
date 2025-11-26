@@ -175,6 +175,16 @@ class Sales extends CI_Controller
         echo json_encode($res);
     }
 
+    public function deleteHoldSale(){
+        $data = json_decode($this->input->raw_input_stream);
+        $this->db->where('SaleMaster_SlNo', $data->holdSaleId);
+        $this->db->delete('tbl_hold_sale');
+
+        $this->db->where('SaleMaster_IDNo', $data->holdSaleId);
+        $this->db->delete('tbl_hold_sale_detail');
+        echo json_encode(['success' => true, 'message' => 'Hold sale deleted successfully']);
+    }
+
     public function addSales()
     {
         $res = ['success' => false, 'message' => ''];
@@ -1439,6 +1449,17 @@ class Sales extends CI_Controller
         }
         $data['title'] = "Sales Record";
         $data['content'] = $this->load->view('Administrator/sales/sales_record', $data, TRUE);
+        $this->load->view('Administrator/index', $data);
+    }
+
+    function hold_sale_list()
+    {
+        $access = $this->mt->userAccess();
+        if (!$access) {
+            redirect(base_url());
+        }
+        $data['title'] = "Sales Record";
+        $data['content'] = $this->load->view('Administrator/sales/hold_sale_list', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
 

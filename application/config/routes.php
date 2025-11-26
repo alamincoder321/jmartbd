@@ -176,6 +176,9 @@ $route['SelectDamageProduct'] = 'Administrator/Purchase/damage_select_product';
 $route['hold_sale/(:any)'] = 'Administrator/Sales/holdSale/$1';
 $route['add_hold_sale'] = 'Administrator/Sales/addHoldSale';
 $route['get_hold_sale'] = 'Administrator/Sales/getHoldSale';
+$route['delete_hold_sale'] = 'Administrator/Sales/deleteHoldSale';
+$route['hold_sale_list'] = 'Administrator/Sales/hold_sale_list';
+
 
 $route['sales/(:any)'] = 'Administrator/Sales/index/$1';
 $route['sales/(:any)/(:any)'] = 'Administrator/Sales/salesEdit/$1/$2';
@@ -216,7 +219,6 @@ $route['get_packages'] = 'Administrator/Combo_package/getPackages';
 
 
 $route['sale_invoice_print/(:any)'] = 'Administrator/Sales/saleInvoicePrint/$1';
-$route['craditlimit'] = 'Administrator/Sales/craditlimit/';
 $route['salesrecord'] = 'Administrator/Sales/sales_record';
 $route['sales_record_print/(:any)'] = 'Administrator/Reports/sales_record_print/$1';
 $route['customerwiseSalesPrint'] = 'Administrator/Reports/customerwise_sales';
