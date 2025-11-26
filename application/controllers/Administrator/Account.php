@@ -748,9 +748,12 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    u.FullName as saved_by
+
                 from tbl_bank_transactions bt
                 join tbl_bank_accounts ac on ac.account_id = bt.account_id
+                left join tbl_user u on u.User_SlNo = bt.saved_by
                 where bt.status = 1
                 and bt.transaction_type = 'deposit'
                 and bt.branch_id = " . $this->session->userdata('BRANCHid') . "
@@ -770,7 +773,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    smb.AddBy as saved_by
                 from tbl_sales_bank smb
                 join tbl_bank_accounts ac on ac.account_id = smb.bank_id
                 left join tbl_salesmaster sm on sm.SaleMaster_SlNo = smb.sale_id
@@ -792,7 +796,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    ex.AddBy as saved_by
                 from tbl_exchange ex
                 join tbl_bank_accounts ac on ac.account_id = ex.bank_id
                 left join tbl_salesmaster sm on sm.SaleMaster_SlNo = ex.sale_id
@@ -814,9 +819,11 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    u.FullName as saved_by
                 from tbl_bank_transactions bt
                 join tbl_bank_accounts ac on ac.account_id = bt.account_id
+                left join tbl_user u on u.User_SlNo = bt.saved_by
                 where bt.status = 1
                 and bt.transaction_type = 'withdraw'
                 and bt.branch_id = " . $this->session->userdata('BRANCHid') . "
@@ -836,7 +843,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    cp.CPayment_Addby as saved_by
                 from tbl_customer_payment cp
                 join tbl_bank_accounts ac on ac.account_id = cp.account_id
                 join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
@@ -860,7 +868,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    cp.CPayment_Addby as saved_by
                 from tbl_customer_payment cp
                 join tbl_bank_accounts ac on ac.account_id = cp.account_id
                 join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
@@ -884,7 +893,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    sp.SPayment_Addby as saved_by
                 from tbl_supplier_payment sp
                 join tbl_bank_accounts ac on ac.account_id = sp.account_id
                 join tbl_supplier s on s.Supplier_SlNo = sp.SPayment_customerID
@@ -908,7 +918,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    sp.SPayment_Addby as saved_by
                 from tbl_supplier_payment sp
                 join tbl_bank_accounts ac on ac.account_id = sp.account_id
                 join tbl_supplier s on s.Supplier_SlNo = sp.SPayment_customerID
@@ -932,7 +943,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    ctf.AddBy as saved_by
                 from tbl_cash_transfer ctf
                 join tbl_bank_accounts ac on ac.account_id = ctf.from_bank_id
                 left join tbl_brunch b on b.brunch_id = ctf.transfer_to
@@ -956,7 +968,8 @@ class Account extends CI_Controller
                     ac.account_number,
                     ac.bank_name,
                     ac.branch_name,
-                    0.00 as balance
+                    0.00 as balance,
+                    ctf.AddBy as saved_by
                 from tbl_cash_transfer ctf
                 join tbl_bank_accounts ac on ac.account_id = ctf.from_bank_id
                 left join tbl_brunch b on b.brunch_id = ctf.transfer_from

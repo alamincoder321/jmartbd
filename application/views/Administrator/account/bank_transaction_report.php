@@ -92,6 +92,7 @@
                         <tr>
                             <th>Sl</th>
                             <th>Description</th>
+                            <th>Entry By</th>
                             <th>Transaction Date</th>
                             <th>Account Name</th>
                             <th>Account Number</th>
@@ -106,6 +107,7 @@
                         <tr v-for="(transaction, sl) in transactions">
                             <td style="text-align:right">{{ sl + 1}}</td>
                             <td style="text-align:left;">{{ transaction.description }}</td>
+                            <td>{{ transaction.saved_by }}</td>
                             <td>{{ transaction.transaction_date }}</td>
                             <td>{{ transaction.account_name }}</td>
                             <td>{{ transaction.account_number }}</td>
@@ -114,15 +116,12 @@
                             <td style="text-align:right">{{ transaction.deposit }}</td>
                             <td style="text-align:right">{{ transaction.withdraw }}</td>
                         </tr>
-                    </tbody>
-
-                    <tfoot>
                         <tr style="font-weight:bold;">
-                            <td colspan="7" style="text-align:right;">Total &nbsp;</td>
+                            <td colspan="8" style="text-align:right;">Total &nbsp;</td>
                             <td style="text-align:right;">{{ totalDeposit = this.transactions.reduce((prev, curr) => { return prev + parseFloat(curr.deposit)}, 0) }}</td>
                             <td style="text-align:right;">{{ totalWithdraw = this.transactions.reduce((prev, curr) => { return prev + parseFloat(curr.withdraw)}, 0) }}</td>
                         </tr>
-                    </tfoot>
+                    </tbody>
                 </table>
             </div>
         </div>

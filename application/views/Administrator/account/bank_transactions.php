@@ -99,6 +99,13 @@
                             </div>
 
                             <div class="form-group">
+                                <label for="" class="control-label col-md-4">Bank TXID</label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" v-model="transaction.bank_txid" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
                                 <label for="" class="control-label col-md-4">Amount</label>
                                 <div class="col-md-8">
                                     <input type="number" class="form-control" v-model="transaction.amount" required>
@@ -165,6 +172,7 @@
                                         <td>{{ row.account_number }}</td>
                                         <td>{{ row.bank_name }}</td>
                                         <td>{{ row.transaction_type }}</td>
+                                        <td>{{ row.bank_txid }}</td>
                                         <td>{{ row.note }}</td>
                                         <td>{{ row.amount }}</td>
                                         <td>{{ row.saved_by }}</td>
@@ -205,6 +213,7 @@
                     account_id: '',
                     transaction_date: moment().format('YYYY-MM-DD'),
                     transaction_type: '',
+                    bank_txid: '',
                     amount: '',
                     note: ''
                 },
@@ -232,6 +241,11 @@
                     {
                         label: 'Transaction Type',
                         field: 'transaction_type',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Bank TXID',
+                        field: 'bank_txid',
                         align: 'center'
                     },
                     {
@@ -376,6 +390,7 @@
                 this.transaction.account_id = '';
                 this.transaction.transaction_type = '';
                 this.transaction.amount = '';
+                this.transaction.bank_txid = '';
                 this.transaction.note = '';
 
                 this.selectedAccount = null;
