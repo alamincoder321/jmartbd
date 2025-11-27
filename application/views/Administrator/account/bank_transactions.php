@@ -328,15 +328,10 @@
                     .then(res => {
                         let r = res.data;
                         alert(r.message);
+                        this.onProgress = false;
                         if (r.success) {
                             this.resetForm();
                             this.getTransactions();
-                            this.onProgress = false;
-                        }
-                    })
-                    .catch(error => {
-                        if (error.response) {
-                            alert(`${error.response.status}, ${error.response.statusText}`)
                         }
                     })
             },

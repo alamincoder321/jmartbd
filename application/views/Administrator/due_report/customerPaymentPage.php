@@ -245,7 +245,7 @@
 				<datatable :columns="columns" :data="payments" :filter-by="filter" style="margin-bottom: 5px;">
 					<template scope="{ row }">
 						<tr>
-							<td>{{ row.CPayment_invoice }}</td>
+							<td>{{ row.bank_txid != null ? row.bank_txid : row.CPayment_invoice }}</td>
 							<td>{{ row.CPayment_date }}</td>
 							<td>{{ row.Customer_Name }}</td>
 							<td>{{ row.CPayment_TransactionType == 'CR' ? 'Received' : 'Payment' }}</td>

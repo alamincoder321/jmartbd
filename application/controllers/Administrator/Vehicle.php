@@ -37,7 +37,16 @@ class Vehicle extends CI_Controller
 
     public function getVehicles()
     {
-        $vehicles = $this->db->where('branch_id', $this->brunch)->where('status !=', 'd')->get('tbl_vehicles')->result();
+        $vehicles = $this->db
+            ->where('branch_id', $this->brunch)
+            ->where('status !=', 'd')
+            ->get('tbl_vehicles')
+            ->result();
+        
+        foreach ($vehicles as $vehicle) {
+            $vehicle->display_name = $vehicle->name;
+        }
+
         echo json_encode($vehicles);
     }
 

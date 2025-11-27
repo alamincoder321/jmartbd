@@ -289,7 +289,7 @@ $route['get_user_activity'] = 'Administrator/User_management/getUserActivity';
 $route['delete_user_activity'] = 'Administrator/User_management/deleteUserActivity';
 $route['userName'] = 'Administrator/User_management/all_user_name';
 
-$route['brunch'] = 'Administrator/Page/brunch';
+$route['branch'] = 'Administrator/Page/branch';
 $route['add_branch'] = 'Administrator/Page/addBranch';
 $route['update_branch'] = 'Administrator/Page/updateBranch';
 $route['brunchEdit'] = 'Administrator/Page/brunch_edit';

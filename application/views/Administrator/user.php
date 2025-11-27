@@ -39,7 +39,7 @@
 					<label class="col-xs-1 control-label">:</label>
 					<div class="col-xs-6">
 						<select class="form-control" style="padding:0;" name="branch_id" v-model="user.branch_id" id="branch_id">
-							<option value="1" v-if="companyProfile">{{companyProfile.Company_Name}}</option>
+							<option v-for="item in branches" :value="item.brunch_id" v-text="item.Brunch_name" :selected="item.brunch_id == branchId"></option>
 						</select>
 						<div id="brand_" class="col-xs-12"></div>
 					</div>
@@ -216,6 +216,7 @@
 				filter: '',
 
 				userId: '<?php echo $this->session->userdata("userId"); ?>',
+				branchId: '<?php echo $this->session->userdata("BRANCHid"); ?>',
 				companyProfile: null
 			}
 		},

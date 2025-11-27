@@ -108,7 +108,13 @@ class Account extends CI_Controller
 
     public function getAccounts()
     {
-        $accounts = $this->db->query("select * from tbl_account where status = 'a' and branch_id = ?", $this->session->userdata('BRANCHid'))->result();
+        $accounts = $this->db
+            ->query("select a.* 
+                from tbl_account a
+                where a.status = 'a'
+                and (a.Acc_SlNo in (1, 2, 3) or a.branch_id = ?)
+                ", $this->session->userdata('BRANCHid'))->result();
+
         echo json_encode($accounts);
     }
 
@@ -120,8 +126,6 @@ class Account extends CI_Controller
             redirect(base_url());
         }
         $data['title'] = "Expense Entry";
-        $data['transaction'] = $this->Billing_model->select_all_transaction();
-        $data['accounts'] = $this->Other_model->get_all_account_info();
         $data['content'] = $this->load->view('Administrator/account/cash_transaction', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
@@ -625,6 +629,13 @@ class Account extends CI_Controller
         $res = ['success' => false, 'message' => ''];
         try {
             $data = json_decode($this->input->raw_input_stream);
+            // check bank txid uniqueness
+            $checkTxid = $this->db->query("select * from tbl_bank_transactions where bank_txid = ? and status = 1", $data->bank_txid)->num_rows();
+            if ($checkTxid > 0) {
+                $res = ['success' => false, 'message' => "Bank TXID already exists"];
+                echo json_encode($res);
+                exit;
+            }
             $transaction = (array)$data;
             $transaction['saved_by'] = $this->session->userdata('userId');
             $transaction['saved_datetime'] = date('Y-m-d H:i:s');
@@ -646,6 +657,14 @@ class Account extends CI_Controller
         try {
             $data = json_decode($this->input->raw_input_stream);
             $transactionId = $data->transaction_id;
+            // check bank txid uniqueness
+            $checkTxid = $this->db->query("select * from tbl_bank_transactions where bank_txid = ? and status = 1 and transaction_id != ?", [$data->bank_txid, $transactionId])->num_rows();
+            if ($checkTxid > 0) {
+                $res = ['success' => false, 'message' => "Bank TXID already exists"];
+                echo json_encode($res);
+                exit;
+            }
+
             $transaction = (array)$data;
             unset($transaction['transaction_id']);
 

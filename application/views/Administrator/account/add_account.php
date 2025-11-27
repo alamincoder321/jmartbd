@@ -1,17 +1,20 @@
 <style>
-	#accountForm select{
-		padding: 0!important;
-	}
-    #accountsTable .button{
+    #accountForm select {
+        padding: 0 !important;
+    }
+
+    #accountsTable .button {
         width: 25px;
         height: 25px;
         border: none;
         color: white;
     }
-    #accountsTable .edit{
+
+    #accountsTable .edit {
         background-color: #7bb1e0;
     }
-    #accountsTable .delete{
+
+    #accountsTable .delete {
         background-color: #ff6666;
     }
 </style>
@@ -54,10 +57,10 @@
                                 <label class="control-label col-md-4">Account Type</label>
                                 <div class="col-md-8">
                                     <select class="form-control" v-model="account.Acc_Tr_Type">
-										<option value="">Select Account Type</option>
-										<option value="In Cash">Cash In</option>
-										<option value="Out Cash">Cash Out</option>
-									</select>
+                                        <option value="">Select Account Type</option>
+                                        <option value="In Cash">Cash In</option>
+                                        <option value="Out Cash">Cash Out</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -79,7 +82,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="widget-box">
         <div class="widget-header">
             <h4 class="widget-title">Account List</h4>
@@ -111,14 +114,14 @@
                                         <td>{{ row.Acc_Name }}</td>
                                         <td>{{ row.Acc_Description }}</td>
                                         <td>
-                                            <?php if($this->session->userdata('accountType') != 'u'){?>
-                                            <button class="button edit" @click="editAccount(row)">
-                                                <i class="fa fa-pencil"></i>
-                                            </button>
-                                            <button class="button delete" @click="deleteAccount(row.Acc_SlNo)">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                            <?php }?>
+                                            <?php if ($this->session->userdata('accountType') != 'u') { ?>
+                                                <button class="button edit" @click="editAccount(row)">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button v-if="row.Acc_SlNo != 1 && row.Acc_SlNo != 2 && row.Acc_SlNo != 3" class="button delete" @click="deleteAccount(row.Acc_SlNo)">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            <?php } ?>
                                         </td>
                                     </tr>
                                 </template>
@@ -132,99 +135,116 @@
     </div>
 </div>
 
-<script src="<?php echo base_url();?>assets/js/vue/vue.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/axios.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vuejs-datatable.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/axios.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vuejs-datatable.js"></script>
 
 <script>
     new Vue({
         el: '#accounts',
-        data(){
+        data() {
             return {
                 account: {
                     Acc_SlNo: null,
-					Acc_Code: '<?php echo $accountCode;?>',
-					Acc_Tr_Type: '',
-					Acc_Name: '',
-					Acc_Description: ''
+                    Acc_Code: '<?php echo $accountCode; ?>',
+                    Acc_Tr_Type: '',
+                    Acc_Name: '',
+                    Acc_Description: ''
                 },
                 accounts: [],
 
 
-                columns: [
-                    { label: 'Account Id', field: 'Acc_Code', align: 'center' },
-                    { label: 'Account Name', field: 'Acc_Name', align: 'center' },
-                    { label: 'Description', field: 'Acc_Description', align: 'center' },
-                    { label: 'Action', align: 'center', filterable: false }
+                columns: [{
+                        label: 'Account Id',
+                        field: 'Acc_Code',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Account Name',
+                        field: 'Acc_Name',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Description',
+                        field: 'Acc_Description',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Action',
+                        align: 'center',
+                        filterable: false
+                    }
                 ],
                 page: 1,
                 per_page: 10,
                 filter: ''
             }
         },
-        created(){
+        created() {
             this.getAccounts();
         },
         methods: {
-            getAccounts(){
+            getAccounts() {
                 axios.get('/get_accounts').then(res => {
                     this.accounts = res.data;
                 })
             },
 
-            saveAccount(){
+            saveAccount() {
                 let url = '/add_account';
-                if(this.account.Acc_SlNo != null){
+                if (this.account.Acc_SlNo != null) {
                     url = '/update_account';
                 }
                 axios.post(url, this.account).then(res => {
-                    let r = res.data;
-                    alert(r.message);
-                    if(r.success){
-                        this.resetForm();
-						this.account.Acc_Code = r.newAccountCode;
-                        this.getAccounts();
-                    }
-                })
-                .catch(error => {
-                    if(error.response){
-                        alert(`${error.response.status}, ${error.response.statusText}`);
-                    }
-                })
+                        let r = res.data;
+                        alert(r.message);
+                        if (r.success) {
+                            this.resetForm();
+                            this.account.Acc_Code = r.newAccountCode;
+                            this.getAccounts();
+                        }
+                    })
+                    .catch(error => {
+                        if (error.response) {
+                            alert(`${error.response.status}, ${error.response.statusText}`);
+                        }
+                    })
             },
 
-            editAccount(account){
+            editAccount(account) {
                 Object.keys(this.account).forEach(key => {
                     this.account[key] = account[key];
                 })
             },
 
-            deleteAccount(accountId){
-				let confirmation = confirm("Are you sure?");
-				if(confirmation == false){
-					return;
-				}
-				axios.post('/delete_account', {accountId: accountId})
-				.then(res => {
-					let r = res.data;
-                    alert(r.message);
-                    if(r.success){
-                        this.getAccounts();
-                    }
-                })
-                .catch(error => {
-                    if(error.response){
-                        alert(`${error.response.status}, ${error.response.statusText}`);
-                    }
-                })
+            deleteAccount(accountId) {
+                let confirmation = confirm("Are you sure?");
+                if (confirmation == false) {
+                    return;
+                }
+                axios.post('/delete_account', {
+                        accountId: accountId
+                    })
+                    .then(res => {
+                        let r = res.data;
+                        alert(r.message);
+                        if (r.success) {
+                            this.getAccounts();
+                        }
+                    })
+                    .catch(error => {
+                        if (error.response) {
+                            alert(`${error.response.status}, ${error.response.statusText}`);
+                        }
+                    })
             },
 
-            resetForm(){
+            resetForm() {
                 this.account = {
                     Acc_SlNo: null,
-					Acc_Tr_Type: '',
-					Acc_Name: '',
-					Acc_Description: ''
+                    Acc_Tr_Type: '',
+                    Acc_Name: '',
+                    Acc_Description: ''
                 }
             }
         }
