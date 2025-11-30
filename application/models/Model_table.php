@@ -340,7 +340,7 @@ class Model_Table extends CI_Model
 
             (
                 select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
-                where ctf.paymentType = 'cash'
+                where ctf.paymentTypeTo = 'cash'
                 and ctf.status = 'a'
                 " . (!empty($branchId) ? "and ctf.transfer_to = '$branchId'" : "") . "
                 " . ($date == null ? "" : " and ctf.date < '$date'") . "
@@ -412,7 +412,7 @@ class Model_Table extends CI_Model
             ) as buy_asset,
             (
                 select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
-                where ctf.paymentType = 'cash'
+                where ctf.paymentTypeFrom = 'cash'
                 and ctf.status = 'a'
                 " . (!empty($branchId) ? "and ctf.transfer_from = '$branchId'" : "") . "
                 " . ($date == null ? "" : " and ctf.date < '$date'") . "
@@ -512,7 +512,7 @@ class Model_Table extends CI_Model
                 ) as total_received_from_supplier,
                 (
                     select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
-                    where ctf.paymentType = 'bank'
+                    where ctf.paymentTypeFrom = 'bank'
                     and ctf.from_bank_id = ba.account_id
                     and ctf.status = 'a'
                     " . (!empty($branchId) ? "and ctf.transfer_from = '$branchId'" : "") . "
@@ -520,7 +520,7 @@ class Model_Table extends CI_Model
                 ) as transferFrom,
                 (
                     select ifnull(sum(ctf.amount), 0) from tbl_cash_transfer ctf
-                    where ctf.paymentType = 'bank'
+                    where ctf.paymentTypeTo = 'bank'
                     and ctf.to_bank_id = ba.account_id
                     and ctf.status = 'a'
                     " . (!empty($branchId) ? "and ctf.transfer_to = '$branchId'" : "") . "

@@ -59,20 +59,18 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 					</div>
 				</div>
 
-				<?php if ($this->session->userdata('BRANCHid') == 1 && (isset($CheckSuperAdmin) || isset($CheckAdmin))) : ?>
-					<div class="col-md-3 col-xs-6 section4">
-						<div class="col-md-12 section122" style="background-color:#dcf5ea;" onmouseover="this.style.background = '#bdecd7'" onmouseout="this.style.background = '#dcf5ea'">
-							<a href="<?php echo base_url(); ?>module/PurchaseModule">
-								<div class="logo">
-									<i class="fa fa-cart-plus"></i>
-								</div>
-								<div class="textModule">
-									Manage Purchase
-								</div>
-							</a>
-						</div>
+				<div class="col-md-3 col-xs-6 section4">
+					<div class="col-md-12 section122" style="background-color:#dcf5ea;" onmouseover="this.style.background = '#bdecd7'" onmouseout="this.style.background = '#dcf5ea'">
+						<a href="<?php echo base_url(); ?>module/PurchaseModule">
+							<div class="logo">
+								<i class="fa fa-cart-plus"></i>
+							</div>
+							<div class="textModule">
+								Manage Purchase
+							</div>
+						</a>
 					</div>
-				<?php endif; ?>
+				</div>
 
 				<!-- module/AccountsModule -->
 				<div class="col-md-3 col-xs-6 section4">

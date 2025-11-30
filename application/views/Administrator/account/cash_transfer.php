@@ -93,17 +93,17 @@
 
                     <div class="col-md-5">
                         <div class="form-group">
-                            <label class="col-md-4 control-label">Payment Type</label>
+                            <label class="col-md-4 control-label">PaymentType From</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7">
-                                <select class="form-control" required v-model="transaction.paymentType" @change="onChangePaymentType">
+                                <select class="form-control" required v-model="transaction.paymentTypeFrom" @change="onChangePaymentType">
                                     <option value="cash">Cash</option>
                                     <option value="bank">Bank</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="form-group" style="display: none;" :style="{ display: transaction.paymentType == 'bank' ? '' : 'none' }" v-if="transaction.paymentType == 'bank'">
+                        <div class="form-group" style="display: none;" :style="{ display: transaction.paymentTypeFrom == 'bank' ? '' : 'none' }" v-if="transaction.paymentTypeFrom == 'bank'">
                             <label class="col-md-4 control-label">From Bank</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7 col-xs-11">
@@ -111,7 +111,18 @@
                             </div>
                         </div>
 
-                        <div class="form-group" style="display: none;" :style="{ display: transaction.paymentType == 'bank' ? '' : 'none' }" v-if="transaction.paymentType == 'bank'">
+                        <div class="form-group">
+                            <label class="col-md-4 control-label">PaymentType To</label>
+                            <label class="col-md-1">:</label>
+                            <div class="col-md-7">
+                                <select class="form-control" required v-model="transaction.paymentTypeTo" @change="onChangePaymentType">
+                                    <option value="cash">Cash</option>
+                                    <option value="bank">Bank</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="display: none;" :style="{ display: transaction.paymentTypeTo == 'bank' ? '' : 'none' }" v-if="transaction.paymentTypeTo == 'bank'">
                             <label class="col-md-4 control-label">To Bank</label>
                             <label class="col-md-1">:</label>
                             <div class="col-md-7 col-xs-11">
@@ -160,10 +171,11 @@
                             <td>{{ row.invoice }}</td>
                             <td>{{ row.date }}</td>
                             <td>{{ row.from_branch }}</td>
+                            <td>{{ row.paymentTypeFrom }}</td>
                             <td>{{ row.from_bank }}</td>
                             <td>{{ row.to_branch }}</td>
+                            <td>{{ row.paymentTypeTo }}</td>
                             <td>{{ row.to_bank }}</td>
-                            <td>{{ row.paymentType }}</td>
                             <td>{{ row.amount }}</td>
                             <td>{{ row.note }}</td>
                             <td>
@@ -207,7 +219,8 @@
                     invoice: "<?= $invoice; ?>",
                     date: moment().format('YYYY-MM-DD'),
                     transfer_from: "<?= $this->session->userdata('BRANCHid'); ?>",
-                    paymentType: 'cash',
+                    paymentTypeFrom: 'cash',
+                    paymentTypeTo: 'cash',
                     amount: '',
                     note: '',
                     previous_balance: 0
@@ -238,6 +251,11 @@
                         align: 'center'
                     },
                     {
+                        label: 'P.Type From',
+                        field: 'paymentTypeFrom',
+                        align: 'center'
+                    },
+                    {
                         label: 'From Bank',
                         field: 'from_bank',
                         align: 'center'
@@ -248,16 +266,15 @@
                         align: 'center'
                     },
                     {
+                        label: 'P.Type To',
+                        field: 'paymentTypeTo',
+                        align: 'center'
+                    },
+                    {
                         label: 'To Bank',
                         field: 'to_bank',
                         align: 'center'
                     },
-                    {
-                        label: 'Payment Type',
-                        field: 'paymentType',
-                        align: 'center'
-                    },
-
                     {
                         label: 'Amount',
                         field: 'amount',
@@ -298,7 +315,7 @@
                 })
             },
             getBankBalance() {
-                axios.get('/get_cash_and_bank_balance').then(res => {                    
+                axios.get('/get_cash_and_bank_balance').then(res => {
                     this.bank_balances = res.data.bankBalance;
                 })
             },
@@ -336,14 +353,14 @@
                 this.selectedFromBank = null;
                 this.selectedToBank = null;
                 this.transaction.previous_balance = 0;
-                if(this.transaction.paymentType == 'cash') {
+                if (this.transaction.paymentTypeFrom == 'cash' || this.transaction.paymentTypeTo == 'cash') {
                     this.getCashBalance();
                 } else {
                     this.getBankBalance();
                 }
             },
-            onChangeFromBank(){
-                if(this.selectedFromBank) {
+            onChangeFromBank() {
+                if (this.selectedFromBank) {
                     this.transaction.previous_balance = this.bank_balances.filter(item => item.account_id == this.selectedFromBank.account_id)[0].balance;
                 } else {
                     this.transaction.previous_balance = 0;
@@ -391,6 +408,12 @@
                 });
 
                 this.selectedToBranch = this.branches.find(branch => branch.brunch_id == transaction.transfer_to) || null;
+                setTimeout(() => {
+                    this.selectedFromBank = this.banks.find(bank => bank.account_id == transaction.from_bank_id) || null;
+                }, 1500);
+                setTimeout(() => {
+                    this.selectedToBank = this.tobanks.find(bank => bank.account_id == transaction.to_bank_id) || null;
+                }, 2000);
             },
             deleteTransaction(transactionId) {
                 if (!confirm('Are you sure to delete?')) {
@@ -426,7 +449,8 @@
                     invoice: "",
                     date: moment().format('YYYY-MM-DD'),
                     transfer_from: "<?= $this->session->userdata('BRANCHid'); ?>",
-                    paymentType: 'cash',
+                    paymentTypeFrom: 'cash',
+                    paymentTypeTo: 'cash',
                     amount: '',
                     note: '',
                     previous_balance: 0

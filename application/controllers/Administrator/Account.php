@@ -969,7 +969,7 @@ class Account extends CI_Controller
                 left join tbl_brunch b on b.brunch_id = ctf.transfer_to
                 where ctf.from_bank_id is not null
                 and ctf.status = 'a'
-                and ctf.paymentType = 'bank'
+                and ctf.paymentTypeFrom = 'bank'
                 and ctf.transfer_from = " . $this->session->userdata('BRANCHid') . "
                 
                 UNION
@@ -990,11 +990,11 @@ class Account extends CI_Controller
                     0.00 as balance,
                     ctf.AddBy as saved_by
                 from tbl_cash_transfer ctf
-                join tbl_bank_accounts ac on ac.account_id = ctf.from_bank_id
+                join tbl_bank_accounts ac on ac.account_id = ctf.to_bank_id
                 left join tbl_brunch b on b.brunch_id = ctf.transfer_from
                 where ctf.to_bank_id is not null
                 and ctf.status = 'a'
-                and ctf.paymentType = 'bank'
+                and ctf.paymentTypeTo = 'bank'
                 and ctf.transfer_to = " . $this->session->userdata('BRANCHid') . "
             ) as tbl
             where 1 = 1 $clauses
@@ -1269,7 +1269,7 @@ class Account extends CI_Controller
             left join tbl_brunch b on b.brunch_id = ctf.transfer_from
             where ctf.status = 'a'
             and ctf.transfer_to = '$this->brunch'
-            and ctf.paymentType = 'cash'
+            and ctf.paymentTypeTo = 'cash'
             and ctf.date between '$data->fromDate' and '$data->toDate'
             
             /* Cash out */
@@ -1419,7 +1419,7 @@ class Account extends CI_Controller
             left join tbl_brunch b on b.brunch_id = ctf.transfer_to
             where ctf.status = 'a'
             and ctf.transfer_from = '$this->brunch'
-            and ctf.paymentType = 'cash'
+            and ctf.paymentTypeFrom = 'cash'
             and ctf.date between '$data->fromDate' and '$data->toDate'
 
             order by date, id
