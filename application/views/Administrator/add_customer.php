@@ -227,6 +227,7 @@
 							<td>{{ row.Customer_Name }}</td>
 							<td>{{ row.District_Name }}</td>
 							<td>{{ row.Customer_Mobile }}</td>
+							<td>{{ row.Customer_Type }}</td>
 							<td>
 								<span v-show="row.is_member == 'yes'" class="badge badge-success">Member</span>
 								<span v-show="row.is_member == 'no'" class="badge badge-danger">Non Member</span>
@@ -319,6 +320,11 @@
 					{
 						label: 'Contact Number',
 						field: 'Customer_Mobile',
+						align: 'center'
+					},
+					{
+						label: 'Customer Type',
+						field: 'Customer_Type',
 						align: 'center'
 					},
 					{

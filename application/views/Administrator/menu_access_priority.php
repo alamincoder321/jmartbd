@@ -50,6 +50,7 @@
                 <input type="checkbox" id="accounts" class="group-head" @click="onClickGroupHeads"> <strong>Accounts</strong>
                 <ul ref="accounts">
                     <li><input type="checkbox" class="access" value="cashTransaction" v-model="access"> Expense Entry</li>
+                    <li><input type="checkbox" class="access" value="cash_transfer" v-model="access"> Internal Transfer</li>
                     <li><input type="checkbox" class="access" value="bank_transactions" v-model="access"> Bank Transactions</li>
                     <li><input type="checkbox" class="access" value="customerPaymentPage" v-model="access"> Customer Payment</li>
                     <li><input type="checkbox" class="access" value="supplierPayment" v-model="access"> Supplier Payment</li>

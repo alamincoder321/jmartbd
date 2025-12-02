@@ -15,8 +15,14 @@ $type = $CPROW->CPayment_TransactionType;
 
 $Custid = $CPROW->CPayment_customerID;
 
-$prevdueAmont = $CPROW->CPayment_previous_due;
-$totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAmont + $CPROW->CPayment_amount;
+$prevdueAmount = $CPROW->CPayment_previous_due;
+
+if ($CPROW->Customer_Type == 'wholesale' || $CPROW->Customer_Type == 'DSO') {
+    $totalDue = $type == 'CR' ? $prevdueAmount + $CPROW->dueBalance : $prevdueAmount - $CPROW->dueBalance;
+} else {
+    $totalDue = $type == 'CR' ? $prevdueAmount - $CPROW->CPayment_amount : $prevdueAmount + $CPROW->CPayment_amount;
+}
+
 
 ?>
 
@@ -118,12 +124,20 @@ $totalDue = $type == 'CR' ? $prevdueAmont - $CPROW->CPayment_amount : $prevdueAm
                 <table style="width: 25%;float:left;">
                     <tr>
                         <td style="font-size: 13px; font-weight: 600; ">Previous Due : </td>
-                        <td style="font-size: 13px; font-weight: 600; text-align: right; "> <?php echo number_format($prevdueAmont, 2); ?></td>
+                        <td style="font-size: 13px; font-weight: 600; text-align: right; "> <?php echo number_format($prevdueAmount, 2); ?></td>
                     </tr>
-                    <tr>
-                        <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; "><?php echo $CPROW->CPayment_TransactionType == 'CR' ? 'Received' : 'Payment'; ?> : </td>
-                        <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; text-align: right; "><?php echo number_format($CPROW->CPayment_amount, 2); ?></td>
-                    </tr>
+                    <?php if ($CPROW->Customer_Type == 'DSO' || $CPROW->Customer_Type == 'wholesale'): ?>
+                        <tr>
+                            <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000;">Last Invoice Due : </td>
+                            <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; text-align: right;"> <?php echo number_format($CPROW->dueBalance, 2); ?></td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if ($CPROW->Customer_Type != 'DSO' && $CPROW->Customer_Type != 'wholesale'): ?>
+                        <tr>
+                            <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000;"><?php echo $CPROW->CPayment_TransactionType == 'CR' ? 'Received' : 'Payment'; ?> : </td>
+                            <td style="font-size: 13px; font-weight: 600; border-bottom: 2px solid #000; text-align: right;"><?php echo number_format($CPROW->CPayment_amount, 2); ?></td>
+                        </tr>
+                    <?php endif; ?>
                     <tr>
                         <td style="font-size: 13px; font-weight: 600; ">Current Due : </td>
                         <td style="font-size: 13px; font-weight: 600; text-align: right; "><?php echo number_format($totalDue, 2); ?></td>
