@@ -125,7 +125,7 @@ class Customer extends CI_Controller
             select
                 cp.*,
                 c.Customer_Code,
-                c.Customer_Name,
+                ifnull(c.Customer_Name, 'General Customer') as Customer_Name,
                 c.Customer_Mobile,
                 c.Customer_Type,
                 ba.account_name,
@@ -142,7 +142,7 @@ class Customer extends CI_Controller
                     else 'Cash'
                 end as payment_by
             from tbl_customer_payment cp
-            join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
+            left join tbl_customer c on c.Customer_SlNo = cp.CPayment_customerID
             left join tbl_bank_accounts ba on ba.account_id = cp.account_id
             where cp.CPayment_status = 'a'
             and cp.CPayment_brunchid = ? $clauses

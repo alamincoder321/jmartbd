@@ -269,7 +269,7 @@ class Model_Table extends CI_Model
             select
             /* Received */
             (
-                select ifnull(sum(sm.SaleMaster_PaidAmount - sm.returnAmount), 0) from tbl_salesmaster sm
+                select ifnull(sum(sm.SaleMaster_cashPaid - sm.returnAmount), 0) from tbl_salesmaster sm
                 where sm.Status = 'a'
                 " . (!empty($branchId) ? "and sm.SaleMaster_branchid = '$branchId'" : "") . "
                 " . ($date == null ? "" : " and sm.SaleMaster_SaleDate < '$date'") . "
