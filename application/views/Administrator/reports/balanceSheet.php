@@ -75,6 +75,10 @@
 								<td style="text-align:right;">{{ totalCashReceived | decimal }}</td>
 							</tr>
 							<tr>
+								<td>Internal Transfer In</td>
+								<td style="text-align:right;">{{ totalCashTransferIn | decimal }}</td>
+							</tr>
+							<tr>
 								<td>Withdraw from Bank</td>
 								<td style="text-align:right;">{{ totalBankWithdraw | decimal }}</td>
 							</tr>
@@ -127,6 +131,10 @@
 							<tr>
 								<td>Cash Paid</td>
 								<td style="text-align:right;">{{ totalCashPaid | decimal }}</td>
+							</tr>
+							<tr>
+								<td>Internal Transfer Out</td>
+								<td style="text-align:right;">{{ totalCashTransferOut | decimal }}</td>
 							</tr>
 							<tr>
 								<td>Deposit to Bank</td>
@@ -205,6 +213,8 @@
 				paidToSuppliers: [],
 				cashReceived: [],
 				cashPaid: [],
+				transferIns: [],
+				transferOuts: [],
 				bankDeposits: [],
 				bankWithdraws: [],
 				loanReceives: [],
@@ -264,6 +274,16 @@
 					return prev + parseFloat(curr.Out_Amount)
 				}, 0).toFixed(2);
 			},
+			totalCashTransferIn() {
+				return this.transferIns.reduce((prev, curr) => {
+					return prev + parseFloat(curr.amount)
+				}, 0).toFixed(2);
+			},
+			totalCashTransferOut() {
+				return this.transferOuts.reduce((prev, curr) => {
+					return prev + parseFloat(curr.amount)
+				}, 0).toFixed(2);
+			},
 			totalBankDeposit() {
 				return this.bankDeposits.reduce((prev, curr) => {
 					return prev + parseFloat(curr.amount)
@@ -305,6 +325,7 @@
 					parseFloat(this.totalReceivedFromCustomers) +
 					parseFloat(this.totalReceivedFromSuppliers) +
 					parseFloat(this.totalCashReceived) +
+					parseFloat(this.totalCashTransferIn) +
 					parseFloat(this.totalLoanReceived) +
 					parseFloat(this.totalInvestReceived) +
 					parseFloat(this.totalAssetsSales) +
@@ -315,6 +336,7 @@
 					parseFloat(this.totalPaidToCustomers) +
 					parseFloat(this.totalPaidToSuppliers) +
 					parseFloat(this.totalCashPaid) +
+					parseFloat(this.totalCashTransferOut) +
 					parseFloat(this.totalBankDeposit) +
 					parseFloat(this.totalLoanPayment) +
 					parseFloat(this.totalInvestPayment) +
@@ -336,6 +358,8 @@
 				await this.getReceivedFromSuppliers();
 				await this.getCashReceived();
 				await this.getCashPaid();
+				await this.getCashTransferIn();
+				await this.getCashTransferOut();
 				await this.getBankDeposits();
 				await this.getBankWithdraws();
 				await this.getLoanReceives();
@@ -431,6 +455,31 @@
 				await axios.post('/get_cash_transactions', filter)
 					.then(res => {
 						this.cashPaid = res.data;
+					})
+			},
+			async getCashTransferIn() {
+				let filter = {
+					dateFrom: this.filter.dateFrom,
+					dateTo: this.filter.dateTo,
+					transferType: 'in',
+					status: 'a'
+				}
+				await axios.post('/get_cash_transfers', filter)
+					.then(res => {
+						this.transferIns = res.data;
+					})
+			},
+
+			async getCashTransferOut() {
+				let filter = {
+					dateFrom: this.filter.dateFrom,
+					dateTo: this.filter.dateTo,
+					transferType: 'out',
+					status: 'a'
+				}
+				await axios.post('/get_cash_transfers', filter)
+					.then(res => {
+						this.transferOuts = res.data;
 					})
 			},
 

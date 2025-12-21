@@ -257,6 +257,7 @@
 							<td>{{ row.CPayment_amount }}</td>
 							<td>{{ row.dueBalance }}</td>
 							<td>{{ row.CPayment_notes }}</td>
+							<td>{{ row.CPayment_Addby }}</td>
 							<td>
 								<button type="button" class="button edit" @click="window.location = `/paymentAndReport/${row.CPayment_id}`">
 									<i class="fa fa-file-o"></i>
@@ -381,6 +382,11 @@
 					{
 						label: 'Description',
 						field: 'CPayment_notes',
+						align: 'center'
+					},
+					{
+						label: 'EntryBy',
+						field: 'CPayment_Addby',
 						align: 'center'
 					},
 					{

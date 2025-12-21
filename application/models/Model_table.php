@@ -284,7 +284,7 @@ class Model_Table extends CI_Model
                 select ifnull(sum(cp.CPayment_amount), 0) from tbl_customer_payment cp
                 where cp.CPayment_TransactionType = 'CR'
                 and cp.CPayment_status = 'a'
-                and cp.CPayment_Paymentby != 'bank'
+                and cp.CPayment_Paymentby = 'cash'
                 " . (!empty($branchId) ? "and cp.CPayment_brunchid = '$branchId'" : "") . "
                 " . ($date == null ? "" : " and cp.CPayment_date < '$date'") . "
             ) as received_customer,
@@ -365,7 +365,7 @@ class Model_Table extends CI_Model
                 select ifnull(sum(cp.CPayment_amount), 0) from tbl_customer_payment cp
                 where cp.CPayment_TransactionType = 'CP'
                 and cp.CPayment_status = 'a'
-                and cp.CPayment_Paymentby != 'bank'
+                and cp.CPayment_Paymentby = 'cash'
                 " . (!empty($branchId) ? "and cp.CPayment_brunchid = '$branchId'" : "") . "
                 " . ($date == null ? "" : " and cp.CPayment_date < '$date'") . "
             ) as paid_customer,

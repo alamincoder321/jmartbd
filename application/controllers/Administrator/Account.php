@@ -391,6 +391,14 @@ class Account extends CI_Controller
         if (isset($data->dateFrom) && $data->dateFrom != '' && isset($data->dateTo) && $data->dateTo != '') {
             $clauses = " and ct.date between '$data->dateFrom' and '$data->dateTo'";
         }
+        if(!empty($data->transferType) && $data->transferType == 'in'){
+            $clauses .= " and ct.transfer_to = '".$this->session->userdata('BRANCHid')."'";
+            $clauses .= " and ct.paymentTypeTo = 'cash'";
+        }
+        if(!empty($data->transferType) && $data->transferType == 'out'){
+            $clauses .= " and ct.transfer_from = '".$this->session->userdata('BRANCHid')."'";
+            $clauses .= " and ct.paymentTypeFrom = 'cash'";
+        }
 
         $transactions = $this->db->query("
             select 
@@ -410,8 +418,8 @@ class Account extends CI_Controller
             left join tbl_brunch bt on bt.brunch_id = ct.transfer_to
             left join tbl_bank_accounts fba on fba.account_id = ct.from_bank_id
             left join tbl_bank_accounts tba on tba.account_id = ct.to_bank_id
-            where ct.status != 'd'
-            and (ct.transfer_to = ? or ct.transfer_from = ?)
+            where (ct.transfer_to = ? or ct.transfer_from = ?)
+            ".(!empty($data->status) ? "and ct.status = '$data->status'" : "and ct.status != 'd'")."
             $clauses
             order by ct.id desc
         ", [$this->session->userdata('BRANCHid'), $this->session->userdata('BRANCHid')])->result();

@@ -80,14 +80,25 @@
 		</div>
 	</div>
 	<div class="row" v-if="searchType != null" style="display:none" v-bind:style="{display: searchType == null ? 'none' : ''}">
-		<div class="col-md-12">
+		<div class="col-md-6">
 			<a href="" v-on:click.prevent="print"><i class="fa fa-print"></i> Print</a>
 		</div>
-		<a href="" v-on:click.prevent="excelExport" style="float:right">
-			<i class="fa fa-file-excel-o"></i> Excel
-		</a>
+		<div class="col-md-6 text-right">
+			<a href="" v-on:click.prevent="excelExport">
+				<i class="fa fa-file-excel-o"></i> Excel
+			</a>
+		</div>
 	</div>
-	<div class="row">
+	<div class="row" style="margin-top: 8px;">
+		<div class="col-md-4 col-md-offset-8 text-right" style="display: none;" :style="{display: stock.length > 0 ? '' : 'none'}" v-if="stock.length > 0">
+			<table style="width: 100%;">
+				<tr>
+					<td><strong>Stock Purchase Value</strong></td>
+					<td style="width: 5px;">:</td>
+					<td><strong>{{totalStockValue | decimal}}</strong></td>
+				</tr>
+			</table>
+		</div>
 		<div class="col-md-12">
 			<div class="table-responsive" id="stockContent">
 				<table class="table table-bordered" v-if="searchType == 'current'" style="display:none" v-bind:style="{display: searchType == 'current' ? '' : 'none'}">
@@ -115,7 +126,7 @@
 					</tbody>
 					<tfoot>
 						<tr>
-							<th colspan="5" style="text-align:right;">Total Stock Value</th>
+							<th colspan="6" style="text-align:right;">Stock Purchase Value</th>
 							<th>{{ totalStockValue | decimal }}</th>
 						</tr>
 					</tfoot>
@@ -167,7 +178,7 @@
 					</tbody>
 					<tfoot>
 						<tr>
-							<th colspan="14" style="text-align:right;">Total Stock Value</th>
+							<th colspan="15" style="text-align:right;">Stock Purchase Value</th>
 							<th>{{ totalStockValue | decimal }}</th>
 						</tr>
 					</tfoot>
