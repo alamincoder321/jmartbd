@@ -1650,6 +1650,34 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 						</div>
 					</div>
 				<?php endif; ?>
+				<?php if (array_search("international_customerPayment", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+					<div class="col-md-2 col-xs-6 custom-padding ">
+						<div class="col-md-12 section20">
+							<a href="<?php echo base_url(); ?>international_customerPayment">
+								<div class="logo">
+									<i class="menu-icon fa fa-money"></i>
+								</div>
+								<div class="textModule">
+								 	Payment Receive
+								</div>
+							</a>
+						</div>
+					</div>
+				<?php endif; ?>
+				<?php if (array_search("international_customer_payment_history", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+					<div class="col-md-2 col-xs-6 custom-padding ">
+						<div class="col-md-12 section20">
+							<a href="<?php echo base_url(); ?>international_customer_payment_history">
+								<div class="logo">
+									<i class="menu-icon fa fa-list"></i>
+								</div>
+								<div class="textModule">
+									Receive History
+								</div>
+							</a>
+						</div>
+					</div>
+				<?php endif; ?>
 			</div>
 			<!-- PAGE CONTENT ENDS -->
 		</div><!-- /.col -->

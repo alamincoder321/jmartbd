@@ -185,6 +185,20 @@ class Model_Table extends CI_Model
         return $paymentCode;
     }
 
+    public function generateInternationalCustomerPaymentCode()
+    {
+        $paymentCode = "TR00001";
+
+        $lastPayment = $this->db->query("select * from tbl_international_customer_payment order by CPayment_id desc limit 1");
+        if ($lastPayment->num_rows() != 0) {
+            $newPaymentId = $lastPayment->row()->CPayment_id + 1;
+            $zeros = array('0', '00', '000', '0000');
+            $paymentCode = 'TR' . (strlen($newPaymentId) > count($zeros) ? $newPaymentId : $zeros[count($zeros) - strlen($newPaymentId)] . $newPaymentId);
+        }
+
+        return $paymentCode;
+    }
+
     public function generateSupplierPaymentCode()
     {
         $paymentCode = "TR00001";
@@ -837,6 +851,55 @@ class Model_Table extends CI_Model
             where s.status = 'a'
             " . (!empty($branchId) ? "and s.Supplier_brinchid = '$branchId'" : "") . "
             $clauses
+        ")->result();
+
+        return $supplierDues;
+    }
+
+    public function internationalsupplierDue($clauses = "", $date = null)
+    {
+        $branchId = $this->session->userdata('BRANCHid');
+
+        $supplierDues = $this->db->query("
+            select
+            s.Supplier_SlNo,
+            s.Supplier_Code,
+            s.Supplier_Name,
+            s.Supplier_Mobile,
+            s.Supplier_Address,
+            s.contact_person,
+            (select (ifnull(sum(pm.PurchaseMaster_TotalAmount), 0.00) + ifnull(s.previous_due, 0.00)) from tbl_international_purchasemaster pm
+                where pm.Supplier_SlNo = s.Supplier_SlNo
+                " . ($date == null ? "" : " and pm.PurchaseMaster_OrderDate < '$date'") . "
+                and pm.status = 'a'
+            ) as bill,
+
+            (select ifnull(sum(pm2.PurchaseMaster_PaidAmount), 0.00) from tbl_international_purchasemaster pm2
+                where pm2.Supplier_SlNo = s.Supplier_SlNo
+                " . ($date == null ? "" : " and pm2.PurchaseMaster_OrderDate < '$date'") . "
+                and pm2.status = 'a'
+            ) as invoicePaid,
+
+            (select ifnull(sum(sp.SPayment_amount), 0.00) from tbl_international_supplier_payment sp 
+                where sp.SPayment_customerID = s.Supplier_SlNo 
+                and sp.SPayment_TransactionType = 'CP'
+                " . ($date == null ? "" : " and sp.SPayment_date < '$date'") . "
+                and sp.SPayment_status = 'a'
+            ) as cashPaid,
+                
+            (select ifnull(sum(sp2.SPayment_amount), 0.00) from tbl_international_supplier_payment sp2 
+                where sp2.SPayment_customerID = s.Supplier_SlNo 
+                and sp2.SPayment_TransactionType = 'CR'
+                " . ($date == null ? "" : " and sp2.SPayment_date < '$date'") . "
+                and sp2.SPayment_status = 'a'
+            ) as cashReceived,
+            
+            (select invoicePaid + cashPaid) as paid,
+            
+            (select (bill + cashReceived) - (paid)) as due
+
+            from tbl_international_supplier s
+            where s.Supplier_brinchid = '$branchId' $clauses
         ")->result();
 
         return $supplierDues;

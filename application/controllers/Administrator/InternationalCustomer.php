@@ -65,23 +65,6 @@ class InternationalCustomer extends CI_Controller
         echo json_encode($customers);
     }
 
-    public function getCustomerDue()
-    {
-        $data = json_decode($this->input->raw_input_stream);
-
-        $clauses = "";
-        if (isset($data->customerId) && $data->customerId != null) {
-            $clauses .= " and c.Customer_SlNo = '$data->customerId'";
-        }
-        if (isset($data->districtId) && $data->districtId != null) {
-            $clauses .= " and c.area_ID = '$data->districtId'";
-        }
-
-        $dueResult = $this->mt->customerDue($clauses);
-
-        echo json_encode($dueResult);
-    }
-
     public function getCustomerPayments()
     {
         $data = json_decode($this->input->raw_input_stream);
@@ -161,7 +144,7 @@ class InternationalCustomer extends CI_Controller
 
             $checkinv = $this->db->query("select * from tbl_international_customer_payment where CPayment_invoice = ?", $paymentObj->CPayment_invoice)->num_rows();
             if ($checkinv > 0) {
-                $paymentObj->CPayment_invoice = $this->mt->generateCustomerPaymentCode();
+                $paymentObj->CPayment_invoice = $this->mt->generateInternationalCustomerPaymentCode();
             }
 
             $payment = (array)$paymentObj;
@@ -173,19 +156,7 @@ class InternationalCustomer extends CI_Controller
             $this->db->insert('tbl_international_customer_payment', $payment);
             $paymentId = $this->db->insert_id();
 
-            if ($paymentObj->CPayment_TransactionType == 'CR') {
-                $currentDue = $paymentObj->CPayment_TransactionType == 'CR' ? $paymentObj->CPayment_previous_due - $paymentObj->CPayment_amount : $paymentObj->CPayment_previous_due + $paymentObj->CPayment_amount;
-                //Send sms
-                $customerInfo = $this->db->query("select * from tbl_international_customer where Customer_SlNo = ?", $paymentObj->CPayment_customerID)->row();
-                $sendToName = $customerInfo->owner_name != '' ? $customerInfo->owner_name : $customerInfo->Customer_Name;
-                $currency = $this->session->userdata('Currency_Name');
-
-                $message = "Dear {$sendToName},\nThanks for your payment. Received amount is {$currency} {$paymentObj->CPayment_amount}. Current due is {$currency} {$currentDue}";
-                $recipient = $customerInfo->Customer_Mobile;
-                $this->sms->sendSms($recipient, $message);
-            }
-
-            $res = ['success' => true, 'message' => 'Payment added successfully', 'paymentId' => $paymentId, 'CPayment_invoice' => $this->mt->generateCustomerPaymentCode()];
+            $res = ['success' => true, 'message' => 'Payment added successfully', 'paymentId' => $paymentId, 'CPayment_invoice' => $this->mt->generateInternationalCustomerPaymentCode()];
         } catch (Exception $ex) {
             $res = ['success' => false, 'message' => $ex->getMessage()];
         }
@@ -219,7 +190,7 @@ class InternationalCustomer extends CI_Controller
 
             $this->db->where('CPayment_id', $paymentObj->CPayment_id)->update('tbl_international_customer_payment', $payment);
 
-            $res = ['success' => true, 'message' => 'Payment updated successfully', 'paymentId' => $paymentId, 'CPayment_invoice' => $this->mt->generateCustomerPaymentCode()];
+            $res = ['success' => true, 'message' => 'Payment updated successfully', 'paymentId' => $paymentId, 'CPayment_invoice' => $this->mt->generateInternationalCustomerPaymentCode()];
         } catch (Exception $ex) {
             $res = ['success' => false, 'message' => $ex->getMessage()];
         }
@@ -400,175 +371,10 @@ class InternationalCustomer extends CI_Controller
             redirect(base_url());
         }
         $data['title'] = "Payment Received";
-        $data['CPayment_invoice'] = $this->mt->generateCustomerPaymentCode();
-        $data['content'] = $this->load->view('Administrator/due_report/customerPaymentPage', $data, TRUE);
+        $data['CPayment_invoice'] = $this->mt->generateInternationalCustomerPaymentCode();
+        $data['content'] = $this->load->view('Administrator/international/internationalcustomerPaymentPage', $data, TRUE);
         $this->load->view('Administrator/index', $data);
-    }
-
-    function paymentAndReport($id = Null)
-    {
-        $data['title'] = "Customer Payment Reports";
-        if ($id != 'pr') {
-            $pid["PamentID"] = $id;
-            $this->session->set_userdata($pid);
-        }
-        $data['content'] = $this->load->view('Administrator/due_report/paymentAndReport', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-
-    function customer_payment_report($customerId = "")
-    {
-        $access = $this->mt->userAccess();
-        if (!$access) {
-            redirect(base_url());
-        }
-        $data['customerId'] = $customerId;
-        $data['title'] = "Customer Payment Reports";
-        $data['content'] = $this->load->view('Administrator/payment_reports/customer_payment_report', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-
-    function getCustomerLedger()
-    {
-        $data = json_decode($this->input->raw_input_stream);
-        $previousDueQuery = $this->db->query("select ifnull(previous_due, 0.00) as previous_due from tbl_international_customer where Customer_SlNo = '$data->customerId'")->row();
-
-        $payments = $this->db->query("
-            select 
-                'a' as sequence,
-                sm.SaleMaster_SlNo as id,
-                sm.SaleMaster_SaleDate as date,
-                concat('Sales ', sm.SaleMaster_InvoiceNo) as description,
-                sm.SaleMaster_TotalSaleAmount as bill,
-                ((sm.SaleMaster_cashPaid + sm.SaleMaster_bankPaid) - sm.returnAmount) as paid,
-                sm.SaleMaster_DueAmount as due,
-                0.00 as returned,
-                0.00 as paid_out,
-                0.00 as balance
-            from tbl_salesmaster sm
-            where sm.SalseCustomer_IDNo = '$data->customerId'
-            and sm.Status = 'a'
-            
-            UNION
-            select
-                'b' as sequence,
-                cp.CPayment_id as id,
-                cp.CPayment_date as date,
-                concat('Received - ', 
-                    case cp.CPayment_Paymentby
-                        when 'bank' then concat('Bank - ', ba.account_name, ' - ', ba.account_number, ' - ', ba.bank_name)
-                        when 'By Cheque' then 'Cheque'
-                        else 'Cash'
-                    end, ' ', cp.CPayment_notes
-                ) as description,
-                cp.dueBalance as bill,
-                0 as paid,
-                0.00 as due,
-                0.00 as returned,
-                0.00 as paid_out,
-                0.00 as balance
-            from tbl_international_customer_payment cp
-            left join tbl_international_customer c on c.Customer_SlNo = cp.CPayment_customerID
-            left join tbl_bank_accounts ba on ba.account_id = cp.account_id
-            where cp.CPayment_TransactionType = 'CR'
-            and (c.Customer_Type = 'DSO' or c.Customer_Type = 'wholesale')
-            and cp.CPayment_customerID = '$data->customerId'
-            and cp.CPayment_status = 'a'
-            
-            UNION
-            select
-                'c' as sequence,
-                cp.CPayment_id as id,
-                cp.CPayment_date as date,
-                concat('Received - ', 
-                    case cp.CPayment_Paymentby
-                        when 'bank' then concat('Bank - ', ba.account_name, ' - ', ba.account_number, ' - ', ba.bank_name)
-                        when 'By Cheque' then 'Cheque'
-                        else 'Cash'
-                    end, ' ', cp.CPayment_notes
-                ) as description,
-                0.00 as bill,
-                cp.CPayment_amount as paid,
-                0.00 as due,
-                0.00 as returned,
-                0.00 as paid_out,
-                0.00 as balance
-            from tbl_international_customer_payment cp
-            left join tbl_international_customer c on c.Customer_SlNo = cp.CPayment_customerID
-            left join tbl_bank_accounts ba on ba.account_id = cp.account_id
-            where cp.CPayment_TransactionType = 'CR'
-            and (c.Customer_Type = 'DSR' or c.Customer_Type = 'retail' or c.Customer_Type = 'Client')
-            and cp.CPayment_customerID = '$data->customerId'
-            and cp.CPayment_status = 'a'
-
-            UNION
-            select
-                'd' as sequence,
-                cp.CPayment_id as id,
-                cp.CPayment_date as date,
-                concat('Paid - ', 
-                    case cp.CPayment_Paymentby
-                        when 'bank' then concat('Bank - ', ba.account_name, ' - ', ba.account_number, ' - ', ba.bank_name)
-                        else 'Cash'
-                    end, ' ', cp.CPayment_notes
-                ) as description,
-                0.00 as bill,
-                0.00 as paid,
-                0.00 as due,
-                0.00 as returned,
-                cp.CPayment_amount as paid_out,
-                0.00 as balance
-            from tbl_international_customer_payment cp
-            left join tbl_bank_accounts ba on ba.account_id = cp.account_id
-            where cp.CPayment_TransactionType = 'CP'
-            and cp.CPayment_customerID = '$data->customerId'
-            and cp.CPayment_status = 'a'
-            
-            UNION
-            select
-                'e' as sequence,
-                sr.SaleReturn_SlNo as id,
-                sr.SaleReturn_ReturnDate as date,
-                'Sales return' as description,
-                0.00 as bill,
-                0.00 as paid,
-                0.00 as due,
-                sr.SaleReturn_ReturnAmount as returned,
-                0.00 as paid_out,
-                0.00 as balance
-            from tbl_salereturn sr
-            join tbl_salesmaster smr on smr.SaleMaster_InvoiceNo  = sr.SaleMaster_InvoiceNo
-            where smr.SalseCustomer_IDNo = '$data->customerId'
-            and sr.Status = 'a'
-            
-            order by date, sequence, id
-        ")->result();
-
-        $previousBalance = $previousDueQuery->previous_due;
-
-        foreach ($payments as $key => $payment) {
-            $lastBalance = $key == 0 ? $previousDueQuery->previous_due : $payments[$key - 1]->balance;
-            $payment->balance = ($lastBalance + $payment->bill + $payment->paid_out) - ($payment->paid + $payment->returned);
-        }
-
-        if ((isset($data->dateFrom) && $data->dateFrom != null) && (isset($data->dateTo) && $data->dateTo != null)) {
-            $previousPayments = array_filter($payments, function ($payment) use ($data) {
-                return $payment->date < $data->dateFrom;
-            });
-
-            $previousBalance = count($previousPayments) > 0 ? $previousPayments[count($previousPayments) - 1]->balance : $previousBalance;
-
-            $payments = array_filter($payments, function ($payment) use ($data) {
-                return $payment->date >= $data->dateFrom && $payment->date <= $data->dateTo;
-            });
-
-            $payments = array_values($payments);
-        }
-
-        $res['previousBalance'] = $previousBalance;
-        $res['payments'] = $payments;
-        echo json_encode($res);
-    }
+    }   
 
     public function customerPaymentHistory()
     {
@@ -577,7 +383,7 @@ class InternationalCustomer extends CI_Controller
             redirect(base_url());
         }
         $data['title'] = "Customer Payment History";
-        $data['content'] = $this->load->view('Administrator/reports/customer_payment_history', $data, TRUE);
+        $data['content'] = $this->load->view('Administrator/international/international_customer_payment_history', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
 }

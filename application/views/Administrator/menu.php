@@ -1558,6 +1558,25 @@ if ($module == 'dashboard' or $module == '') {
 			</li>
 		<?php endif; ?>
 
+		<?php if (array_search("international_customerPayment", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+			<li class="">
+				<a href="<?php echo base_url(); ?>international_customerPayment">
+					<i class="menu-icon fa fa-money"></i>
+					<span class="menu-text"> Payment Receive </span>
+				</a>
+				<b class="arrow"></b>
+			</li>
+		<?php endif; ?>
+		<?php if (array_search("international_customer_payment_history", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+			<li class="">
+				<a href="<?php echo base_url(); ?>international_customer_payment_history">
+					<i class="menu-icon fa fa-list"></i>
+					<span class="menu-text"> Receive History </span>
+				</a>
+				<b class="arrow"></b>
+			</li>
+		<?php endif; ?>
+
 	</ul><!-- /.nav-list -->
 
 <?php } elseif ($module == 'VehicleManagement') { ?>
