@@ -541,8 +541,7 @@ $route['international_supplier'] = 'Administrator/InternationalSupplier';
 $route['get_international_suppliers'] = 'Administrator/InternationalSupplier/getSuppliers';
 $route['add_international_supplier'] = 'Administrator/InternationalSupplier/addSupplier';
 $route['update_international_supplier'] = 'Administrator/InternationalSupplier/updateSupplier';
-$route['supplierList'] = 'Administrator/Reports/supplierList';
-$route['delete_supplier'] = 'Administrator/Supplier/deleteSupplier';
+$route['delete_international_supplier'] = 'Administrator/InternationalSupplier/deleteSupplier';
 $route['get_international_supplier_due'] = 'Administrator/InternationalSupplier/getSupplierDue';
 $route['international_supplier_ledger'] = 'Administrator/InternationalSupplier/supplierPaymentLedger';
 $route['get_international_supplier_ledger'] = 'Administrator/InternationalSupplier/getSupplierLedger';
@@ -566,3 +565,14 @@ $route['international_purchaseInvoice'] = 'Administrator/InternationalPurchase/p
 $route['international_purchaseRecord'] = 'Administrator/InternationalPurchase/purchase_record';
 $route['get_international_purchase_record'] = 'Administrator/InternationalPurchase/getPurchaseRecord';
 $route['delete_international_purchase'] = 'Administrator/InternationalPurchase/deletePurchase';
+
+// international customer route
+$route['international_customer'] = 'Administrator/InternationalCustomer';
+$route['get_international_customers'] = 'Administrator/InternationalCustomer/getCustomers';
+$route['add_international_customer'] = 'Administrator/InternationalCustomer/addCustomer';
+$route['update_international_customer'] = 'Administrator/InternationalCustomer/updateCustomer';
+$route['delete_international_customer'] = 'Administrator/InternationalCustomer/deleteCustomer';
+$route['get_international_customer_due'] = 'Administrator/InternationalCustomer/getCustomerDue';
+$route['international_customer_ledger'] = 'Administrator/InternationalCustomer/customerPaymentLedger';
+$route['get_international_customer_ledger'] = 'Administrator/InternationalCustomer/getCustomerLedger';
+

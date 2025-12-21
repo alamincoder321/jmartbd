@@ -115,6 +115,20 @@ class Model_Table extends CI_Model
         return $customerCode;
     }
 
+    public function generateInternationalCustomerCode()
+    {
+        $customerCode = "C00001";
+
+        $lastCustomer = $this->db->query("select * from tbl_international_customer order by Customer_SlNo desc limit 1");
+        if ($lastCustomer->num_rows() != 0) {
+            $newCustomerId = $lastCustomer->row()->Customer_SlNo + 1;
+            $zeros = array('0', '00', '000', '0000');
+            $customerCode = 'C' . (strlen($newCustomerId) > count($zeros) ? $newCustomerId : $zeros[count($zeros) - strlen($newCustomerId)] . $newCustomerId);
+        }
+
+        return $customerCode;
+    }
+
     public function generateProductCode()
     {
         $productCode = "P00001";

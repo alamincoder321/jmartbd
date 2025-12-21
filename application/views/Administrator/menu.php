@@ -1547,6 +1547,16 @@ if ($module == 'dashboard' or $module == '') {
 				<b class="arrow"></b>
 			</li>
 		<?php endif; ?>
+		
+		<?php if (array_search("international_customer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+			<li class="">
+				<a href="<?php echo base_url(); ?>international_customer">
+					<i class="menu-icon fa fa-user"></i>
+					<span class="menu-text"> Customer Entry </span>
+				</a>
+				<b class="arrow"></b>
+			</li>
+		<?php endif; ?>
 
 	</ul><!-- /.nav-list -->
 

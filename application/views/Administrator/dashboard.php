@@ -1636,6 +1636,20 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 						</div>
 					</div>
 				<?php endif; ?>
+				<?php if (array_search("international_customer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
+					<div class="col-md-2 col-xs-6 custom-padding">
+						<div class="col-md-12 section20">
+							<a href="<?php echo base_url(); ?>international_customer">
+								<div class="logo">
+									<i class="menu-icon fa fa-user"></i>
+								</div>
+								<div class="textModule">
+									Customer Entry
+								</div>
+							</a>
+						</div>
+					</div>
+				<?php endif; ?>
 			</div>
 			<!-- PAGE CONTENT ENDS -->
 		</div><!-- /.col -->
