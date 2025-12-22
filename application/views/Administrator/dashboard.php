@@ -1552,6 +1552,22 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 				<div class="col-md-12 header">
 					<h3> International Bill </h3>
 				</div>
+
+				<div class="row">
+					<div class="col-md-4"></div>
+					<div class="col-md-4" style="margin-top: 10px;margin-bottom: 10px;">
+						<div class="card bg-primary text-white" style="padding: 10px 15px;text-align: center;border-radius: 20px;">
+							<div class="card-header" style="padding: 15px 0;">
+								<strong style="font-size: 20px;">Cash Balance</strong>
+							</div>
+							<div class="card-body" style="padding-bottom: 8px;font-size: 16px;font-weight: 700;">
+								<?= $international_cash_balance; ?>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4"></div>
+				</div>
+
 				<?php if (array_search("international_purchase", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
 					<div class="col-md-2 col-xs-6 custom-padding ">
 						<div class="col-md-12 section20">
@@ -1658,7 +1674,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 									<i class="menu-icon fa fa-money"></i>
 								</div>
 								<div class="textModule">
-								 	Payment Receive
+									Payment Receive
 								</div>
 							</a>
 						</div>

@@ -556,13 +556,13 @@ class Reports extends CI_Controller {
             
             from tbl_user u
             where u.status = 'a'
+            and u.Brunch_ID = '$brunch'
             ".(!empty($user) ? " and u.FullName = '$user'" : "")."
             ";
 
         $totals = $this->db->query($query)->result();
 
         echo json_encode($totals);
-
     }
 
     // public function special_report_all_data()

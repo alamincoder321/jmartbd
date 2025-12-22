@@ -18,6 +18,7 @@ class Page extends CI_Controller
     public function index()
     {
         $data['title'] = "Dashboard";
+        $data['international_cash_balance'] = $this->mt->internationalCashBalance()->balance ?? 0;
         $data['content'] = $this->load->view('Administrator/dashboard', $data, TRUE);
         $this->load->view('Administrator/master_dashboard', $data);
     }
@@ -27,24 +28,13 @@ class Page extends CI_Controller
 
         $sdata['module'] = $value;
         $this->session->set_userdata($sdata);
-
+        $data['international_cash_balance'] = $this->mt->internationalCashBalance()->balance ?? 0;
         $data['content'] = $this->load->view('Administrator/dashboard', $data, TRUE);
         $this->load->view('Administrator/master_dashboard', $data);
     }
-    public function khantrading()
-    {
-        $data['title'] = "Dashboard";
-        $data['content'] = $this->load->view('Administrator/khantrading/dashboard', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-    public function about_us()
-    {
-        $data['title'] = "About us";
-        $data['content'] = $this->load->view('Administrator/about_us', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-    // Product Category 
 
+
+    // Product Category 
     public function getCategories()
     {
         $categories = $this->db->query("select * from tbl_productcategory where status = 'a'")->result();

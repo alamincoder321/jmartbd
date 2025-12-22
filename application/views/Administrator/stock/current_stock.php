@@ -90,12 +90,15 @@
 		</div>
 	</div>
 	<div class="row" style="margin-top: 8px;">
-		<div class="col-md-4 col-md-offset-8 text-right" style="display: none;" :style="{display: stock.length > 0 ? '' : 'none'}" v-if="stock.length > 0">
+		<div class="col-md-3">
+			<input style="display: none;" :style="{display: stockFiltered.length > 0 ? '' : 'none'}" v-if="stockFiltered.length > 0" type="text" class="form-control" placeholder="Search....." v-model="selectedText">
+		</div>
+		<div class="col-md-4 col-md-offset-5 text-right" style="display: none;" :style="{display: stock.length > 0 ? '' : 'none'}" v-if="stock.length > 0">
 			<table style="width: 100%;">
 				<tr>
 					<td><strong>Stock Purchase Value</strong></td>
 					<td style="width: 5px;">:</td>
-					<td><strong>{{totalStockValue | decimal}}</strong></td>
+					<td><strong>{{ stock.reduce((pr, cu) => {return pr + parseFloat(cu.stock_value)}, 0) | decimal }}</strong></td>
 				</tr>
 			</table>
 		</div>
@@ -127,7 +130,7 @@
 					<tfoot>
 						<tr>
 							<th colspan="6" style="text-align:right;">Stock Purchase Value</th>
-							<th>{{ totalStockValue | decimal }}</th>
+							<th>{{ stock.reduce((pr, cu) => {return pr + parseFloat(cu.stock_value)}, 0) | decimal }}</th>
 						</tr>
 					</tfoot>
 				</table>
@@ -179,7 +182,7 @@
 					<tfoot>
 						<tr>
 							<th colspan="15" style="text-align:right;">Stock Purchase Value</th>
-							<th>{{ totalStockValue | decimal }}</th>
+							<th>{{ stock.reduce((pr, cu) => {return pr + parseFloat(cu.stock_value)}, 0) | decimal }}</th>
 						</tr>
 					</tfoot>
 				</table>
@@ -227,6 +230,7 @@
 					text: 'Current Stock',
 					value: 'current'
 				},
+				selectedText: '',
 				searchType: null,
 				date: moment().format('YYYY-MM-DD'),
 				categories: [],
@@ -240,7 +244,7 @@
 				selectionText: '',
 
 				stock: [],
-				totalStockValue: 0.00
+				stockFiltered: [],
 			}
 		},
 		filters: {
@@ -248,7 +252,19 @@
 				return value == null ? '0.00' : parseFloat(value).toFixed(2);
 			}
 		},
-		created() {},
+		watch: {
+			selectedText(newVal) {
+				if (newVal.trim() === '') {
+					this.stock = this.stockFiltered;
+				} else {
+					this.stock = this.stockFiltered.filter(item => {
+						return (item.Product_Name && item.Product_Name.toLowerCase().includes(newVal.trim().toLowerCase())) ||
+							(item.Product_Code && item.Product_Code.toLowerCase().includes(newVal.trim().toLowerCase())) ||
+							(item.ProductCategory_Name && item.ProductCategory_Name.toLowerCase().includes(newVal.trim().toLowerCase()));
+					});
+				}
+			}
+		},
 		methods: {
 			excelExport() {
 				let onlyData = this.stock.map(item => {
@@ -321,10 +337,12 @@
 				axios.post(url, parameters).then(res => {
 					if (this.searchType == 'current') {
 						this.stock = res.data.stock.filter((pro) => pro.current_quantity != 0);
+						this.stockFiltered = res.data.stock.filter((pro) => pro.current_quantity != 0);
 					} else {
 						this.stock = res.data.stock;
+						this.stockFiltered = res.data.stock;
 					}
-					this.totalStockValue = res.data.totalValue;
+					this.selectedText = '';
 				})
 			},
 			onChangeSearchType() {

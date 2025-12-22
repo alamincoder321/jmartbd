@@ -1002,33 +1002,6 @@ class Model_Table extends CI_Model
         return $stock;
     }
 
-
-    public function payment_invoice($id)
-    {
-        $sql = mysql_query("SELECT tbl_booking_bill.*, tbl_booking_customer.*, tbl_booking_customer.fld_id as cusID, tbl_cash_receive.fld_id as cashR_ID FROM tbl_booking_bill LEFT JOIN tbl_booking_customer ON tbl_booking_customer.fld_id=tbl_booking_bill.fld_customer_id left join tbl_cash_receive on tbl_booking_bill.fld_id =tbl_cash_receive.fld_order_id  where tbl_booking_bill.fld_id = '$id'");
-        while ($d = mysql_fetch_array($sql)) {
-            return $d;
-        }
-    }
-    public function ajax_cash_payment($key)
-    {
-        $sql = mysql_query("SELECT tbl_booking_bill.*, tbl_booking_customer.*, tbl_booking_customer.fld_id as cusID, tbl_cash_receive.fld_id as cashR_ID FROM tbl_booking_bill LEFT JOIN tbl_booking_customer ON tbl_booking_customer.fld_id=tbl_booking_bill.fld_customer_id left join tbl_cash_receive on tbl_booking_bill.fld_id =tbl_cash_receive.fld_order_id  where tbl_booking_bill.fld_Serial = '$key'");
-        while ($d = mysql_fetch_array($sql)) {
-            return $d;
-        }
-    }
-    public function ajax_cash_receive($id)
-    {
-        $sql = mysql_query("SELECT tbl_booking_bill.*, tbl_booking_customer.*, tbl_booking_customer.fld_id as cusID, tbl_cash_receive.fld_id as cashR_ID FROM tbl_booking_bill LEFT JOIN tbl_booking_customer ON tbl_booking_customer.fld_id=tbl_booking_bill.fld_customer_id left join tbl_cash_receive on tbl_booking_bill.fld_id =tbl_cash_receive.fld_order_id  where tbl_booking_bill.fld_id = '$id'");
-        while ($d = mysql_fetch_array($sql)) {
-            return $d;
-        }
-    }
-    public function add_product($data)
-    {
-        //untuk insert data ke table product
-        $this->db->insert('product', $data);
-    }
     public function save_data($table, $data)
     {
         $result = $this->db->insert($table, $data);
@@ -1046,7 +1019,6 @@ class Model_Table extends CI_Model
         $id = $this->db->insert_id();
         return (isset($id)) ? $id : FALSE;
     }
-
 
     public function save_date_id($table, $data)
     {
@@ -1083,65 +1055,11 @@ class Model_Table extends CI_Model
         return TRUE;
     }
 
-    public function select_by_Booking_id($id)
-    {
-        $sql = mysql_query("SELECT tbl_booking_bill.*,tbl_booking_bill.fld_id as ordID, tbl_booking_customer.*, tbl_booking_customer.fld_id as cusID, tbl_cash_receive.*, tbl_cash_receive.fld_id as cashR_ID FROM tbl_booking_bill LEFT JOIN tbl_booking_customer ON tbl_booking_customer.fld_id=tbl_booking_bill.fld_customer_id left join tbl_cash_receive on tbl_booking_bill.fld_id =tbl_cash_receive.fld_order_id  where tbl_booking_bill.fld_id = '" . $id . "'");
-        while ($d = mysql_fetch_array($sql)) {
-            return $d;
-        }
-    }
-    public function edit_by_id($query)
-    {
-        $sql = mysql_query($query);
-        while ($d = mysql_fetch_array($sql)) {
-            return $d;
-        }
-    }
-
     public function select_by_id($table, $id, $fld)
     {
         $sql = $this->db->query("SELECT * from {$table} where {$fld} = '" . $id . "'")->row();
         return (array)$sql;
     }
-
-    public function view_data($table)
-    {
-        $a = array();
-        $sql = mysql_query($table);
-        while ($d = mysql_fetch_array($sql)) {
-            $a[] = $d;
-        }
-        return $a;
-    }
-
-
-    public function ccdata($data)
-    {
-        $a = array();
-        $sql = mysql_query($data);
-        while ($d = mysql_fetch_array($sql)) {
-            $a[] = $d;
-        }
-        return $a;
-    }
-
-
-    public function mailcheck_availablity()
-    {
-        $mail = $this->input->post('usermail');
-
-        $query = $this->db->query("SELECT fld_email from tbl_superadmin where fld_email = '$mail'");
-        if ($query->num_rows() > 0) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    // public function mailcheck_availablity(){
-
-    //}
-
 
     public function getBrunchNameById($id)
     {
@@ -1327,5 +1245,35 @@ class Model_Table extends CI_Model
         if (move_uploaded_file($imgFile[$image]["tmp_name"], $target_file)) {
             return $target_file;
         }
+    }
+
+    // international cash balance
+
+    public function internationalCashBalance($branchId = null)
+    {
+        if ($branchId == null) {
+            $branchId = $this->session->userdata('BRANCHid');
+        } else if ($branchId == 'all') {
+            $branchId = '';
+        } else {
+            $branchId = $branchId;
+        }
+
+        $query = $this->db->query("select
+                    (select ifnull(sum(icp.CPayment_amount), 0) from tbl_international_customer_payment icp
+                    where icp.CPayment_status = 'a' and icp.CPayment_TransactionType = 'CR'
+                    and icp.CPayment_brunchid = '$branchId') as customerReceived,
+
+                    (select ifnull(sum(ipm.PurchaseMaster_PaidAmount), 0) from tbl_international_purchasemaster ipm
+                    where ipm.status = 'a' and ipm.PurchaseMaster_BranchID = '$branchId') as purchasePaid,
+
+                    (select ifnull(sum(isp.SPayment_amount), 0) from tbl_international_supplier_payment isp
+                    where isp.SPayment_status = 'a' and isp.SPayment_brunchid = '$branchId'
+                    and isp.SPayment_TransactionType = 'CP') as supplierPayment,
+
+                    (select purchasePaid + supplierPayment) as totalPaid,
+                    (select customerReceived - totalPaid) as balance")->row();
+
+        return $query;
     }
 }

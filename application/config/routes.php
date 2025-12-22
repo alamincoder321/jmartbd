@@ -575,4 +575,5 @@ $route['update_international_customer_payment'] = 'Administrator/InternationalCu
 $route['delete_international_customer_payment'] = 'Administrator/InternationalCustomer/deleteCustomerPayment';
 $route['international_customer_payment_history'] = 'Administrator/InternationalCustomer/customerPaymentHistory';
 
-
+// international cash balance
+$route['get_international_cash_balance'] = 'Administrator/InternationalCustomer/getInternationalCashBalance';

@@ -288,13 +288,6 @@ class InternationalCustomer extends CI_Controller
         try {
             $customerObj = json_decode($this->input->post('data'));
 
-            // $customerMobileCount = $this->db->query("select * from tbl_international_customer where Customer_Mobile = ? and Customer_SlNo != ? and Customer_brunchid = ?", [$customerObj->Customer_Mobile, $customerObj->Customer_SlNo, $this->session->userdata("BRANCHid")])->num_rows();
-
-            // if($customerMobileCount > 0){
-            //     $res = ['success'=>false, 'message'=>'Mobile number already exists'];
-            //     echo Json_encode($res);
-            //     exit;
-            // }
             $customer = (array)$customerObj;
             $customerId = $customerObj->Customer_SlNo;
 
@@ -353,17 +346,6 @@ class InternationalCustomer extends CI_Controller
         echo json_encode($res);
     }
 
-    function customer_due()
-    {
-        $access = $this->mt->userAccess();
-        if (!$access) {
-            redirect(base_url());
-        }
-        $data['title'] = 'Customer Due';
-        $data['content'] = $this->load->view('Administrator/due_report/customer_due', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-
     public function customerPaymentPage()
     {
         $access = $this->mt->userAccess();
@@ -374,7 +356,7 @@ class InternationalCustomer extends CI_Controller
         $data['CPayment_invoice'] = $this->mt->generateInternationalCustomerPaymentCode();
         $data['content'] = $this->load->view('Administrator/international/internationalcustomerPaymentPage', $data, TRUE);
         $this->load->view('Administrator/index', $data);
-    }   
+    }
 
     public function customerPaymentHistory()
     {
@@ -385,5 +367,17 @@ class InternationalCustomer extends CI_Controller
         $data['title'] = "Customer Payment History";
         $data['content'] = $this->load->view('Administrator/international/international_customer_payment_history', $data, TRUE);
         $this->load->view('Administrator/index', $data);
+    }
+
+
+    /// cash balance
+
+    public function getInternationalCashBalance()
+    {
+        $branchId = $this->session->userdata('BRANCHid');
+
+        $result = $this->mt->internationalCashBalance($branchId);
+
+        echo json_encode($result);
     }
 }
