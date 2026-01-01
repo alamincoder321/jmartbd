@@ -880,14 +880,14 @@ class Model_Table extends CI_Model
                 and pm2.status = 'a'
             ) as invoicePaid,
 
-            (select ifnull(sum(sp.SPayment_amount), 0.00) from tbl_international_supplier_payment sp 
+            (select ifnull(sum(sp.convert_amount), 0.00) from tbl_international_supplier_payment sp 
                 where sp.SPayment_customerID = s.Supplier_SlNo 
                 and sp.SPayment_TransactionType = 'CP'
                 " . ($date == null ? "" : " and sp.SPayment_date < '$date'") . "
                 and sp.SPayment_status = 'a'
             ) as cashPaid,
                 
-            (select ifnull(sum(sp2.SPayment_amount), 0.00) from tbl_international_supplier_payment sp2 
+            (select ifnull(sum(sp2.convert_amount), 0.00) from tbl_international_supplier_payment sp2 
                 where sp2.SPayment_customerID = s.Supplier_SlNo 
                 and sp2.SPayment_TransactionType = 'CR'
                 " . ($date == null ? "" : " and sp2.SPayment_date < '$date'") . "
@@ -896,7 +896,7 @@ class Model_Table extends CI_Model
             
             (select invoicePaid + cashPaid) as paid,
             
-            (select (bill + cashReceived) - (paid)) as due
+            (select (bill + paid) - (cashReceived)) as due
 
             from tbl_international_supplier s
             where s.Supplier_brinchid = '$branchId' $clauses

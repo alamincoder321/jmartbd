@@ -103,6 +103,23 @@
                     <li><input type="checkbox" class="access" value="day_book" v-model="access"> Day Book</li>
                 </ul>
             </div>
+            
+            <?php if($this->session->userdata('BRANCHid') == 1): ?>
+            <div class="group">
+                <input type="checkbox" id="accountsReports" class="group-head" @click="onClickGroupHeads"> <strong>International Bill</strong>
+                <ul ref="accountsReports">
+                    <li><input type="checkbox" class="access" value="international_purchase" v-model="access"> Purchase Add </li>
+                    <li><input type="checkbox" class="access" value="international_purchaseRecord" v-model="access"> Purchase Record</li>
+                    <li><input type="checkbox" class="access" value="international_supplierPayment" v-model="access"> Supplier Payment</li>
+                    <li><input type="checkbox" class="access" value="international_supplier_ledger" v-model="access"> Supplier Ledger</li>
+                    <li><input type="checkbox" class="access" value="international_supplier_payment_history" v-model="access"> Payment History</li>
+                    <li><input type="checkbox" class="access" value="international_supplier" v-model="access"> Supplier Entry</li>
+                    <li><input type="checkbox" class="access" value="international_customer" v-model="access"> Customer Entry</li>
+                    <li><input type="checkbox" class="access" value="international_customerPayment" v-model="access"> Payment Receive</li>
+                    <li><input type="checkbox" class="access" value="international_customer_payment_history" v-model="access"> Receive History</li>
+                </ul>
+            </div>
+            <?php endif; ?>
         </div>
         <div class="col-md-3">
             <?php if ($this->session->userdata('BRANCHid') == 1 && (isset($CheckSuperAdmin) || isset($CheckAdmin))) : ?>

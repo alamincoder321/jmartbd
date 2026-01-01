@@ -32,7 +32,7 @@ class Sales extends CI_Controller
         $data['content'] = $this->load->view('Administrator/sales/product_sales', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
-
+    
     public function holdSale($referenceNo)
     {
         $access = $this->mt->userAccess();
@@ -48,7 +48,7 @@ class Sales extends CI_Controller
         $data['content'] = $this->load->view('Administrator/sales/hold_sales', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
-
+    
     public function addHoldSale()
     {
         $res = ['success' => false, 'message' => ''];
@@ -174,7 +174,18 @@ class Sales extends CI_Controller
 
         echo json_encode($res);
     }
-
+    
+    function hold_sale_list()
+    {
+        $access = $this->mt->userAccess();
+        if (!$access) {
+            redirect(base_url());
+        }
+        $data['title'] = "Sales Record";
+        $data['content'] = $this->load->view('Administrator/sales/hold_sale_list', $data, TRUE);
+        $this->load->view('Administrator/index', $data);
+    }
+    
     public function deleteHoldSale(){
         $data = json_decode($this->input->raw_input_stream);
         $this->db->where('SaleMaster_SlNo', $data->holdSaleId);
@@ -191,7 +202,7 @@ class Sales extends CI_Controller
         try {
             $this->db->trans_begin();
             $data = json_decode($this->input->raw_input_stream);
-
+            
             foreach ($data->cart as $key => $item) {
                 if ($item->type == 'package') {
                     $curentstock = $this->mt->productStock($item->productId, true);
@@ -268,8 +279,22 @@ class Sales extends CI_Controller
                 $sales['customerType']       = $data->sales->salesType;
                 $sales['SalseCustomer_IDNo'] = $customerId;
                 if ($data->customer->is_member == 'yes') {
+                    $excludedAmount = 0;
+                    if (!empty($data->cart) && is_array($data->cart)) {
+                        foreach ($data->cart as $cartItem) {
+                            $prodRow = $this->db->query("select ProductsubCategory_ID from tbl_product where Product_SlNo = ?", $cartItem->productId)->row();
+                            $subcatId = $prodRow ? $prodRow->ProductsubCategory_ID : null;
+                            if ($subcatId == 49) {
+                                $excludedAmount += isset($cartItem->total) ? $cartItem->total : ($cartItem->salesRate * $cartItem->quantity);
+                            }
+                        }
+                    }
+
+                    $baseAmountForPoint = max(0, $data->sales->total - $excludedAmount);
+                    $new_points = ($data->customer->amount > 0) ? floor($baseAmountForPoint / $data->customer->amount) : 0;
+
                     $old_point = $this->db->query("select * from tbl_customer where Customer_SlNo = ?", $customerId)->row()->point;
-                    $pointTotal = $old_point + ($data->customer->amount > 0 ? floor($data->sales->total / $data->customer->amount) : 0);
+                    $pointTotal = $old_point + $new_points;
                     $this->db
                         ->where('Customer_SlNo', $customerId)
                         ->update('tbl_customer', [
@@ -278,7 +303,7 @@ class Sales extends CI_Controller
                             'point' => ($pointTotal - $data->sales->pointAmount)
                         ]);
 
-                    $sales['point'] = ($data->customer->amount > 0 ? floor($data->sales->total / $data->customer->amount) : 0);
+                    $sales['point'] = $new_points;
                 }
             }
 
@@ -371,8 +396,8 @@ class Sales extends CI_Controller
                     $this->db->insert('tbl_sales_bank', $bank);
                 }
             }
-
-
+            
+            
             if (!empty($data->sales->referenceNo)) {
                 $holdSaleId = $this->db->query("select * from tbl_hold_sale where SaleMaster_InvoiceNo = ?", $data->sales->referenceNo)->row()->SaleMaster_SlNo;
                 $this->db->where('SaleMaster_InvoiceNo', $data->sales->referenceNo);
@@ -382,20 +407,24 @@ class Sales extends CI_Controller
                 $this->db->delete('tbl_hold_sale_detail');
             }
 
-            // $currentDue = $data->sales->previousDue + ($data->sales->total - $data->sales->paid);
-            // //Send sms
-            // $customerInfo = $this->db->query("select * from tbl_customer where Customer_SlNo = ?", $customerId)->row();
-            // $sendToName = $customerInfo->owner_name != '' ? $customerInfo->owner_name : $customerInfo->Customer_Name;
-            // $currency = $this->session->userdata('Currency_Name');
-
-            //  $message = "Dear {$sendToName},\nYour bill is {$currency} {$data->sales->total}. Received {$currency} {$data->sales->paid} and current due is {$currency} {$currentDue} for invoice {$invoice} From https://jmart.org";
-            //  $recipient = [$customerInfo->Customer_Mobile];
-            // // $this->sms->sendSms($recipient, $message);
-            // $this->sms->sendBulkSms( $recipient,  $message, 'erspro');
-
+            $currentDue = $data->sales->previousDue + ($data->sales->total - $data->sales->paid);
+            //Send sms
+            if(isset($customerInfo)){
+                $customerInfo = $this->db->query("select * from tbl_customer where Customer_SlNo = ?", $customerId)->row();
+                $sendToName = $customerInfo->owner_name  ?  $customerInfo->owner_name : $customerInfo->Customer_Name;
+                $currency = $this->session->userdata('Currency_Name');
+    
+                 $message = "Dear {$sendToName},\nYour bill is {$currency} {$data->sales->total}. Received {$currency} {$data->sales->paid} and current due is {$currency} {$currentDue} for invoice {$invoice} From https://jmart.org";
+                 $recipient = [$customerInfo->Customer_Mobile];
+                // $this->sms->sendSms($recipient, $message);
+                $this->sms->sendBulkSms( $recipient,  $message, 'erspro');
+                
+            }
+            
             $this->db->trans_commit();
 
             $res = ['success' => true, 'message' => 'Sales Success', 'salesId' => $salesId];
+
         } catch (Exception $ex) {
             $this->db->trans_rollback();
             $res = ['success' => false, 'message' => $ex->getMessage()];
@@ -423,6 +452,10 @@ class Sales extends CI_Controller
         if (isset($data->customerId) && $data->customerId != '') {
             $clauses .= " and c.Customer_SlNo = '$data->customerId'";
         }
+        
+        if (isset($data->supplierId) && $data->supplierId != '') {
+            $clauses .= " and p.Supplier_SlNo = '$data->supplierId'";
+        }
 
         if (isset($data->productId) && $data->productId != '') {
             $clauses .= " and p.Product_SlNo = '$data->productId'";
@@ -445,13 +478,14 @@ class Sales extends CI_Controller
                 pc.ProductCategory_Name,
                 sm.SaleMaster_InvoiceNo,
                 sm.SaleMaster_SaleDate,
-                c.Customer_Code,
-                c.Customer_Name
+                ifnull(c.Customer_Name, 'General Customer') as Customer_Code,
+                ifnull(c.Customer_Name, sm.customerName) as Customer_Name,
+                ifnull(c.Customer_Mobile, sm.customerMobile) as Customer_Mobile
             from tbl_saledetails sd
-            join tbl_product p on p.Product_SlNo = sd.Product_IDNo
-            join tbl_productcategory pc on pc.ProductCategory_SlNo = p.ProductCategory_ID
-            join tbl_salesmaster sm on sm.SaleMaster_SlNo = sd.SaleMaster_IDNo
-            join tbl_customer c on c.Customer_SlNo = sm.SalseCustomer_IDNo
+            left join tbl_product p on p.Product_SlNo = sd.Product_IDNo
+            left join tbl_productcategory pc on pc.ProductCategory_SlNo = p.ProductCategory_ID
+            left join tbl_salesmaster sm on sm.SaleMaster_SlNo = sd.SaleMaster_IDNo
+            left join tbl_customer c on c.Customer_SlNo = sm.SalseCustomer_IDNo
             where sd.Status != 'd'
             and sm.SaleMaster_branchid = ?
             $clauses
@@ -485,20 +519,22 @@ class Sales extends CI_Controller
             $clauses .= " and sm.SaleMaster_SlNo = '$data->saleId'";
         }
 
-
-        if (isset($data->type) && $data->type == 'online') {
+       
+        if(isset($data->type) && $data->type == 'online') {
             $status_clauses = " and sm.web_order =  '1'";
-        } else {
-            if (isset($data->saleId) && $data->saleId != '') {
-            } else {
+        }else{
+             if (isset($data->saleId) && $data->saleId != '') {
+                $status_clauses = "";
+             }else{
                 $status_clauses = " and sm.web_order =  0";
-            }
+             }
         }
+        
 
-        if (isset($data->status) && $data->status != '') {
+        if(isset($data->status) && $data->status != '') {
             $status_clauses .= " and sm.Status =  '$data->status'";
             $status_clausessd = " and sd.Status !=  'd'";
-        } else {
+        }else{
             $status_clausessd = "";
         }
 
@@ -525,8 +561,8 @@ class Sales extends CI_Controller
             $clauses
             order by sm.SaleMaster_SlNo desc
         ")->result();
-
-
+        
+        
 
         foreach ($sales as $sale) {
             $sale->saleDetails = $this->db->query("
@@ -557,7 +593,7 @@ class Sales extends CI_Controller
         echo json_encode($sales);
     }
 
-
+    
     public function getSales()
     {
         $data = json_decode($this->input->raw_input_stream);
@@ -618,6 +654,7 @@ class Sales extends CI_Controller
                     p.Product_Code,
                     ifnull(p.Product_Name, cm.packageName) as Product_Name, 
                     pc.ProductCategory_Name,
+                    p.ProductsubCategory_ID,
                     u.Unit_Name,
                     
                     IFNULL(ed.exchange_id, 'false') AS is_exchange
@@ -662,28 +699,29 @@ class Sales extends CI_Controller
                     left join tbl_bank_accounts ba on ba.account_id = sb.bank_id
                     where sb.sale_id = ?", $data->salesId)->result();
         }
-
-        // Modify if online
+        
+               // Modify if online
         // if (isset($data->type) && $data->type == 'online') {
         //     $clauses .= "and sm.web_order = 1 and sm.Status != 'd'";
         // }else{
         //     $clauses .= "and sm.web_order = 0 and sm.Status != 'd'";
         // }
 
-        if (isset($data->type) && $data->type == 'online') {
+         if(isset($data->type) && $data->type == 'online') {
             $clauses .= " and sm.web_order =  '1'";
-        } else {
-            if (isset($data->salesId) && $data->salesId != '') {
-            } else {
-
-                $clauses .= " and sm.web_order =  '0'";
-            }
+        }else{
+              if (isset($data->salesId) && $data->salesId != '') {
+             }else{
+                
+             $clauses .= " and sm.web_order =  '0'";
+                 
+             }
         }
 
-        if (isset($data->status) && $data->status != '') {
+        if(isset($data->status) && $data->status != '') {
             $clauses .= " and sm.Status =  '$data->status'";
-        } else {
-            $clauses .= " and sm.Status !=  'd'";
+        }else{
+             $clauses .= " and sm.Status !=  'd'";
         }
 
 
@@ -721,8 +759,8 @@ class Sales extends CI_Controller
 
         echo json_encode($res);
     }
-
-
+    
+    
     public function getHoldSale()
     {
         $data = json_decode($this->input->raw_input_stream);
@@ -836,9 +874,9 @@ class Sales extends CI_Controller
 
         echo json_encode($res);
     }
-
-
-
+    
+    
+    
 
     public function orderStatus()
     {
@@ -851,7 +889,9 @@ class Sales extends CI_Controller
 
         // $this->db->query("update tbl_salesmaster set Status = ? where SaleMaster_SlNo = ?", [$status, $salesId]);
         if ($status == 'a') {
-            $this->db->query("update tbl_salesmaster set Status = ? where SaleMaster_SlNo = ?", [$status, $salesId]);
+            $sales_record = $this->db->query("select * from tbl_salesmaster where SaleMaster_SlNo = ?", [$salesId])->row();
+
+            $this->db->query("update tbl_salesmaster set Status = ?, SaleMaster_cashPaid = ?, SaleMaster_DueAmount = ? where SaleMaster_SlNo = ?", [$status, $sales_record->SaleMaster_cashPaid + $sales_record->SaleMaster_DueAmount, 0, $salesId]);
             $sales_details = $this->db->query("select * from tbl_saledetails where SaleMaster_IDNo = ?", [$salesId])->result();
             foreach ($sales_details as $key => $value) {
 
@@ -883,9 +923,43 @@ class Sales extends CI_Controller
 
         echo json_encode($res);
     }
+  public function orderDeliveryStatus()
+    {
+        // Decode JSON input
+        $data = json_decode($this->input->raw_input_stream);
+        if (empty($data) || !isset($data->saleId, $data->status)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid data']);
+            return;
+        }
 
+        $salesId = $data->saleId;
+        $status = $data->status;
 
+        // Start transaction
+        $this->db->trans_begin();
 
+        try {
+            // Update delivery status
+            $this->db->query(
+                "UPDATE tbl_salesmaster 
+                SET delivery_status = ? 
+                WHERE SaleMaster_SlNo = ?",
+                [$status, $salesId]
+            );
+
+            // Complete transaction
+            if ($this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+                echo json_encode(['success' => false, 'message' => 'Failed to update order status']);
+            } else {
+                $this->db->trans_commit();
+                echo json_encode(['success' => true, 'message' => 'Order status updated']);
+            }
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+    }
 
     public function updateSales()
     {
@@ -948,15 +1022,33 @@ class Sales extends CI_Controller
             } else {
                 $sales['customerType']       = $data->sales->salesType;
                 $sales['SalseCustomer_IDNo'] = $customerId;
+
                 if ($data->customer->is_member == 'yes') {
-                    $pointTotal = $data->customer->point - $data->sales->pointAmount;
+                    $excludedAmount = 0;
+                    if (!empty($data->cart) && is_array($data->cart)) {
+                        foreach ($data->cart as $cartItem) {
+                            $prodRow = $this->db->query("select ProductsubCategory_ID from tbl_product where Product_SlNo = ?", $cartItem->productId)->row();
+                            $subcatId = $prodRow ? $prodRow->ProductsubCategory_ID : null;
+                            if ($subcatId == 49) {
+                                $excludedAmount += isset($cartItem->total) ? $cartItem->total : ($cartItem->salesRate * $cartItem->quantity);
+                            }
+                        }
+                    }
+
+                    $baseAmountForPoint = max(0, $data->sales->total - $excludedAmount);
+                    $new_points = ($data->customer->amount > 0) ? floor($baseAmountForPoint / $data->customer->amount) : 0;
+                    $old_sale_point = $this->db->query("select point from tbl_salesmaster where SaleMaster_SlNo = ?", $salesId)->row()->point;
+                    $old_point = $this->db->query("select * from tbl_customer where Customer_SlNo = ?", $customerId)->row()->point - $old_sale_point;
+                    $pointTotal = $old_point + $new_points;
                     $this->db
                         ->where('Customer_SlNo', $customerId)
                         ->update('tbl_customer', [
                             'is_member' => $data->customer->is_member,
                             'amount' => $data->customer->amount,
-                            'point' => $pointTotal
+                            'point' => ($pointTotal - $data->sales->pointAmount)
                         ]);
+
+                    $sales['point'] = $new_points;
                 }
             }
 
@@ -1452,17 +1544,6 @@ class Sales extends CI_Controller
         $this->load->view('Administrator/index', $data);
     }
 
-    function hold_sale_list()
-    {
-        $access = $this->mt->userAccess();
-        if (!$access) {
-            redirect(base_url());
-        }
-        $data['title'] = "Sales Record";
-        $data['content'] = $this->load->view('Administrator/sales/hold_sale_list', $data, TRUE);
-        $this->load->view('Administrator/index', $data);
-    }
-
     public function saleInvoicePrint($saleId)
     {
         $data['title'] = "Sales Invoice";
@@ -1508,14 +1589,14 @@ class Sales extends CI_Controller
 
             $sale = $this->db->select('*')->where('SaleMaster_SlNo', $saleId)->get('tbl_salesmaster')->row();
             if ($sale->Status != 'a') {
-                if ($sale->web_order == 1) {
+                if($sale->web_order == 1){
                     $this->db->update('tbl_salesmaster', ['Status' => 'd'], ['SaleMaster_SlNo' => $saleId]);
                     $sale_details = $this->db->select('*')->where('SaleMaster_IDNo', $saleId)->get('tbl_saledetails')->result();
                     foreach ($sale_details as $detail) {
                         $this->db->update('tbl_saledetails', ['status' => 'd'], ['SaleDetails_SlNo' => $detail->SaleDetails_SlNo]);
                     }
                     $res = ['success' => true, 'message' => 'Sale deleted'];
-                } else {
+                }else{
                     $res = ['success' => false, 'message' => 'Sale not found'];
                 }
                 echo json_encode($res);
@@ -1525,7 +1606,7 @@ class Sales extends CI_Controller
             $returnCount = $this->db->query("select * from tbl_salereturn sr where sr.SaleMaster_InvoiceNo = ? and sr.Status = 'a'", $sale->SaleMaster_InvoiceNo)->num_rows();
 
             if ($returnCount != 0) {
-
+                
                 $this->db->update('tbl_salesmaster', ['Status' => 'd'], ['SaleMaster_SlNo' => $saleId]);
                 $sale_details = $this->db->select('*')->where('SaleMaster_IDNo', $saleId)->get('tbl_saledetails')->result();
                 foreach ($sale_details as $detail) {
@@ -1550,8 +1631,8 @@ class Sales extends CI_Controller
                 $this->db->set('sales_quantity', $newQty)->where(['product_id' => $detail->Product_IDNo, 'branch_id' => $sale->SaleMaster_branchid])->update('tbl_currentinventory');
             }
 
-            if ($sale->customerType == 'retail') {
-                $this->db->query("update tbl_customer set point = point + ? where Customer_SlNo = ?", [$sale->pointAmount, $sale->SalseCustomer_IDNo]);
+            if ($sale->customerType != 'G') {
+                $this->db->query("update tbl_customer set point = (point + ?) - ? where Customer_SlNo = ?", [$sale->pointAmount, $sale->point, $sale->SalseCustomer_IDNo]);
             }
             /*Delete Sale Details*/
             $this->db->set('Status', 'd')->where('SaleMaster_IDNo', $saleId)->update('tbl_saledetails');
@@ -1627,12 +1708,14 @@ class Sales extends CI_Controller
     {
         $data = json_decode($this->input->raw_input_stream);
 
-        $clauses = "";
+        $customerClause = "";
         if ($data->customer != null && $data->customer != '') {
-            $clauses = " and sm.SalseCustomer_IDNo = '$data->customer'";
+            $customerClause = " and sm.SalseCustomer_IDNo = '$data->customer'";
         }
+
+        $dateClause = "";
         if (($data->dateFrom != null && $data->dateFrom != '') && ($data->dateTo != null && $data->dateTo != '')) {
-            $clauses = " and sm.SaleMaster_SaleDate between '$data->dateFrom' and '$data->dateTo'";
+            $dateClause = " and sm.SaleMaster_SaleDate between '$data->dateFrom' and '$data->dateTo'";
         }
 
 
@@ -1646,7 +1729,7 @@ class Sales extends CI_Controller
             left join tbl_customer c on c.Customer_SlNo = sm.SalseCustomer_IDNo
             where sm.SaleMaster_branchid = ? 
             and sm.Status = 'a'
-            $clauses
+            $customerClause $dateClause
         ", $this->session->userdata('BRANCHid'))->result();
 
         foreach ($sales as $sale) {
@@ -1660,16 +1743,10 @@ class Sales extends CI_Controller
                 from tbl_saledetails sd 
                 left join tbl_product p on p.Product_SlNo = sd.Product_IDNo
                 where sd.SaleMaster_IDNo = ?
-                " . (!empty($data->categoryId) ? "and p.ProductCategory_ID = '$data->categoryId'" : "") . "
-                " . (!empty($data->productId) ? "and sd.Product_IDNo = '$data->productId'" : "") . "
             ", $sale->SaleMaster_SlNo)->result();
         }
 
-        $sales = array_filter($sales, function ($sale) {
-            return count($sale->saleDetails) > 0;
-        });
-
-        echo json_encode(array_values($sales));
+        echo json_encode($sales);
     }
 
     public function chalan($saleId)

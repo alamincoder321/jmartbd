@@ -18,9 +18,9 @@
 				<div class="row">
 					<div class="col-xs-7">
 						<strong>Supplier Id:</strong> {{ purchaseReturn.Supplier_Code }}<br>
-						<strong>Supplier Name:</strong> {{ purchaseReturn.Supplier_Name }}<br>
-						<strong>Supplier Address:</strong> {{ purchaseReturn.Supplier_Address }}<br>
-						<strong>Supplier Mobile:</strong> {{ purchaseReturn.Supplier_Mobile }}
+						<strong>Name:</strong> {{ purchaseReturn.Supplier_Name }}<br>
+						<strong>Address:</strong> {{ purchaseReturn.Supplier_Address }}<br>
+						<strong>Mobile:</strong> {{ purchaseReturn.Supplier_Mobile }}
 					</div>
 					<div class="col-xs-5 text-right">
 						<strong>Invoice No.:</strong> {{ purchaseReturn.PurchaseMaster_InvoiceNo }}<br>
@@ -41,6 +41,7 @@
 									<td>Sl.</td>
 									<td>Description</td>
 									<td>Quantity</td>
+									<td>Rate</td>
 									<td>Total</td>
 								</tr>
 							</thead>
@@ -49,10 +50,11 @@
 									<td>{{ sl + 1 }}</td>
 									<td>{{ product.Product_Code }} - {{ product.Product_Name }}</td>
 									<td>{{ product.PurchaseReturnDetails_ReturnQuantity }}</td>
+									<td>{{ product.PurchaseReturnDetails_Rate }}</td>
 									<td style="text-align:right;">{{ product.PurchaseReturnDetails_ReturnAmount }}</td>
 								</tr>
 								<tr style="font-weight:bold;">
-									<td colspan="3" style="text-align:right">Total</td>
+									<td colspan="4" style="text-align:right">Total</td>
 									<td style="text-align:right">{{ purchaseReturn.PurchaseReturn_ReturnAmount }}</td>
 								</tr>
 							</tbody>

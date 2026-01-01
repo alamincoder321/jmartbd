@@ -1,200 +1,333 @@
 <style>
-	.v-select{
+	.v-select {
 		margin-bottom: 5px;
-		width: 250px;
 	}
-	.v-select .dropdown-toggle{
+
+	.v-select .dropdown-toggle {
 		padding: 0px;
 	}
-	.v-select input[type=search], .v-select input[type=search]:focus{
+
+	.v-select input[type=search],
+	.v-select input[type=search]:focus {
 		margin: 0px;
 	}
-	.v-select .selected-tag{
-		margin: 0px;
+
+	.v-select .vs__selected-options {
+		overflow: hidden;
+		flex-wrap: nowrap;
+	}
+
+	.v-select .selected-tag {
+		margin: 2px 0px;
+		white-space: nowrap;
+		position: absolute;
+		left: 0px;
+	}
+
+	.v-select .vs__actions {
+		margin-top: -5px;
+	}
+
+	.v-select .dropdown-menu {
+		width: auto;
+		overflow-y: auto;
+	}
+
+	tr td,
+	tr th {
+		vertical-align: middle !important;
 	}
 </style>
 
 <div class="row" id="purchaseReturn">
-	<div class="col-xs-12 col-md-12 col-lg-12" style="border-bottom:1px #ccc solid;">
-		<div class="form-group" style="margin-top:10px;">
-			<label class="col-sm-1 col-sm-offset-1 control-label no-padding-right" for="purchaseInvoiceno"> Invoice no </label>
-			<div class="col-sm-3">
-				<v-select v-bind:options="invoices" label="invoice_text" v-model="selectedInvoice" v-bind:disabled="purchaseReturn.returnId == 0 ? false : true"></v-select>
+	<div class="col-xs-12 col-md-12">
+		<div class="row">
+			<div class="col-xs-12 col-md-12">
+				<div class="row" style="border-radius: 5px; border: 2px solid #007ebb; margin: 0px 0px 10px; padding: 7px 0px; background: #f3f3f3;">
+					<div class="form-group">
+						<label for="" class="col-xs-4 col-md-1">Supplier</label>
+						<div class="col-xs-8 col-md-3">
+							<v-select :options="suppliers" style="margin-bottom: 0;" v-model="selectedSupplier" label="display_name" @input="getProducts"></v-select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="" class="col-xs-4 col-md-2">Return Date</label>
+						<div class="col-xs-8 col-md-2">
+							<input type="date" style="margin-bottom: 0;" class="form-control" v-model="purchaseReturn.returnDate" required>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="" class="col-xs-4 col-md-1">Note</label>
+						<div class="col-xs-8 col-md-3">
+							<input type="text" style="margin-bottom: 0;" class="form-control" v-model="purchaseReturn.note">
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="col-sm-2">
-				<button class="btn btn-info btn-xs" style="width: 100px;" @click="getPurchaseDetailsForReturn" v-bind:disabled="purchaseReturn.returnId == 0 ? false : true">View</button>
+			<div class="col-xs-12 col-md-5">
+				<div class="row" style="border-radius: 5px; border: 2px solid #007ebb; margin: 0px 0px 10px; padding: 7px 0px;">
+					<h3 style="margin: 0; padding-left: 12px;margin-bottom: 10px;border-bottom: 1px solid gray;padding-bottom: 5px;">Product Information</h3>
+					<form @submit.prevent="addToCart">
+						<div class="form-group">
+							<label for="" class="col-xs-4 col-md-3">Product:</label>
+							<div class="col-xs-8 col-md-9">
+								<v-select :options="products" v-model="selectedProduct" label="display_text" @input="onChangeProduct"></v-select>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="" class="col-xs-4 col-md-3">Pur. Rate:</label>
+							<div class="col-xs-8 col-md-4">
+								<input type="number" step="any" min="0" class="form-control" v-model="selectedProduct.Product_Purchase_Rate" @input="productTotal">
+							</div>
+							<label for="" class="col-xs-4 col-md-1">Qty:</label>
+							<div class="col-xs-8 col-md-4">
+								<input type="number" step="any" min="0" ref="quantity" class="form-control" v-model="selectedProduct.quantity" @input="productTotal">
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="" class="col-xs-4 col-md-3">Total:</label>
+							<div class="col-xs-8 col-md-9">
+								<input type="number" step="any" min="0" readonly class="form-control" v-model="selectedProduct.total">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-12 col-md-6">
+								<span style="display: none;" :style="{display: productStock > 0 ? '' : 'none'}" v-if="productStock > 0">Available Stock: {{ productStock }} {{selectedProduct.Unit_Name}}</span>
+								<span style="display: none;" :style="{display: productStock <= 0 ? '' : 'none'}" v-if="productStock <= 0" class="text-danger">Unavailable Stock</span>
+							</div>
+							<div class="col-xs-12 col-md-6 text-right">
+								<button type="submit" class="btn btn-xs btn-danger" style="padding: 5px 15px;border-radius: 5px;">Add to Cart</button>
+							</div>
+						</div>
+					</form>
+				</div>
 			</div>
-		</div>
-	</div>
-	<div class="col-xs-12 col-md-12 col-lg-12" v-if="cart.length > 0" style="display:none" v-bind:style="{display: cart.length > 0 ? '' : 'none'}">
-		<br>
-		<div class="table-responsive">
-			<br>
-			<div class="col-md-6">
-				Return date: <input type="date" v-model="purchaseReturn.returnDate" v-bind:disabled="userType == 'u' ? true : false">
-				<br><br>
-				Check Stock <input type="checkbox" v-model="checkStock">
+			<div class="col-xs-12 col-md-7">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th>Sl.</th>
+							<th>Product</th>
+							<th>Quantity</th>
+							<th>Rate</th>
+							<th>Total</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="(product, index) in cart" :key="index" style="display: none;" :style="{ display: cart.length > 0 ? '' : 'none' }">
+							<td>{{ index + 1 }}</td>
+							<td>{{ product.Product_Name }} - {{product.Product_Code}}</td>
+							<td>{{ product.return_quantity }}</td>
+							<td>{{ product.return_rate }}</td>
+							<td>{{ product.return_amount }}</td>
+							<td>
+								<button class="text-danger" @click="cart.splice(index, 1); calculateTotal();"><i class="fa fa-trash"></i></button>
+							</td>
+						</tr>
+						<tr v-if="cart.length == 0">
+							<td colspan="6" class="text-center">No data found</td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<th colspan="4" class="text-right">Total</th>
+							<th>{{ purchaseReturn.total }}</th>
+							<th>
+								<button class="btn btn-xs btn-success" :disabled="save_disabled" @click="savePurchaseReturn">
+									<span v-if="!save_disabled">Save Return</span>
+									<span v-else>Saving...</span>
+								</button>
+							</th>
+						</tr>
+					</tfoot>
+				</table>
 			</div>
-			<div class="col-md-6 text-right">
-				<h4 style="margin:0px;padding:0px;">Supplier Information</h4>
-				Name: {{ selectedInvoice.Supplier_Name }}<br>
-				Address: {{ selectedInvoice.Supplier_Address }}<br>
-				Mobile: {{ selectedInvoice.Supplier_Mobile }}
-			</div>
-			<table class="table table-bordered">
-				<thead>
-					<tr>
-						<th>Sl</th>
-						<th>Product</th>
-						<th>Quantity</th>
-						<th>Amount</th>
-						<th>Already returned quantity</th>
-						<th>Already returned amount</th>
-						<th>Return Quantity</th>
-						<th>Return Rate</th>
-						<th>Return Amount</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(product, sl) in cart">
-						<td>{{ sl + 1 }}</td>
-						<td>{{ product.Product_Name }}</td>
-						<td>{{ product.PurchaseDetails_TotalQuantity }}</td>
-						<td>{{ product.PurchaseDetails_TotalAmount }}</td>
-						<td>{{ product.returned_quantity }}</td>
-						<td>{{ product.returned_amount }}</td>
-						<td><input type="text" v-model="product.return_quantity" v-on:input="productReturnTotal(sl)"></td>
-						<td><input type="text" v-model="product.return_rate" v-on:input="productReturnTotal(sl)"></td>
-						<td>{{ product.return_amount }}</td>
-					</tr>
-				</tbody>
-				<tfoot>
-					<tr>
-						<td colspan="5" style="text-align:right;padding-top:15px;">Note</td>
-						<td colspan="2">
-							<textarea style="width: 100%" v-model="purchaseReturn.note"></textarea>
-						</td>
-						<td>
-							<button :disabled="save_disabled ? true : false" class="btn btn-success pull-left" v-on:click="savePurchaseReturn">Save</button>
-						</td>
-						<td>Total: {{ purchaseReturn.total }}</td>
-					</tr>
-				</tfoot>
-			</table>
 		</div>
 	</div>
 </div>
 
-<script src="<?php echo base_url();?>assets/js/vue/vue.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/axios.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/vue/vue-select.min.js"></script>
-<script src="<?php echo base_url();?>assets/js/moment.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/axios.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/vue/vue-select.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/moment.min.js"></script>
 
 <script>
 	Vue.component('v-select', VueSelect.VueSelect);
 	new Vue({
 		el: '#purchaseReturn',
-		data(){
+		data() {
 			return {
-				invoices: [],
-				selectedInvoice: null,
+				suppliers: [],
+				selectedSupplier: null,
+				products: [],
+				selectedProduct: {
+					Product_SlNo: '',
+					Product_Name: '',
+					display_text: '',
+					Product_Purchase_Rate: 0,
+					quantity: 0,
+					total: 0
+				},
+				productStock: 0,
 				cart: [],
 				purchaseReturn: {
-					returnId: parseInt('<?php echo $returnId;?>'),
+					returnId: parseInt('<?php echo $returnId; ?>'),
 					returnDate: moment().format('YYYY-MM-DD'),
 					total: 0.00,
 					note: ''
 				},
-				userType: '<?php echo $this->session->userdata("accountType");?>',
-				returnDetails: [],
-				checkStock: true,
+				userType: '<?php echo $this->session->userdata("accountType"); ?>',
 				save_disabled: false,
 			}
 		},
-		created(){
-			this.getPurchases();
-			if(this.purchaseReturn.returnId != 0) {
+		created() {
+			this.getSuppliers();
+			this.getProducts();
+			if (this.purchaseReturn.returnId != 0) {
 				this.getReturn();
 			}
 		},
-		methods:{
-			getPurchases(){
-				axios.get('/get_purchases').then(res=>{
-					this.invoices = res.data.purchases;
+		methods: {
+			getSuppliers() {
+				axios.get('/get_suppliers').then(res => {
+					this.suppliers = res.data;
+					// this.suppliers.unshift({
+					// 	Supplier_SlNo: null,
+					// 	Supplier_Name: 'General Supplier',
+					// 	Supplier_Type: 'G',
+					// 	display_name: 'General Supplier'
+					// })
 				})
 			},
-			async getPurchaseDetailsForReturn(){
-				if(this.selectedInvoice == null){
-					alert('Select invoice');
+
+			getProducts() {
+				axios.post('/get_products', {
+					supplierId: this.selectedSupplier ? this.selectedSupplier.Supplier_SlNo : null
+				}).then(res => {
+					this.products = res.data;
+				})
+			},
+
+			async onChangeProduct() {
+				if (this.selectedProduct == null) {
+					this.selectedProduct = {
+						Product_SlNo: '',
+						Product_Name: '',
+						display_text: '',
+						Product_Purchase_Rate: 0,
+						quantity: 0,
+						total: 0
+					};
 					return;
 				}
-				await axios.post('/get_purchasedetails_for_return', {purchaseId: this.selectedInvoice.PurchaseMaster_SlNo}).then(res=>{
-					this.cart = res.data;
-				})
-			},
-			async productReturnTotal(ind){
-				this.save_disabled = true;
-				if(this.checkStock) {
-					let stock = await axios.post('/get_product_stock', { productId: this.cart[ind].Product_IDNo })
-					.then(res => {
+				if (this.selectedProduct.Product_SlNo != '') {
+					this.productStock = await axios.post('/get_product_stock', {
+						productId: this.selectedProduct.Product_SlNo,
+						supplierId: this.selectedSupplier ? this.selectedSupplier.Supplier_SlNo : null
+					}).then(res => {
 						return res.data;
-					})
-	
-					let returnDetail = this.returnDetails.find(rd => rd.PurchaseReturnDetailsProduct_SlNo == this.cart[ind].Product_IDNo);
-					stock = +stock + +(returnDetail?.PurchaseReturnDetails_ReturnQuantity ?? 0);
-	
-					if(stock < this.cart[ind].return_quantity) {
-						alert('Unavailable stock');
-						this.cart[ind].return_quantity = '';
-						return;
-					}
+					});
+
+					this.$refs.quantity.focus();
 				}
-				if(this.cart[ind].return_quantity > (this.cart[ind].PurchaseDetails_TotalQuantity - this.cart[ind].returned_quantity)){
-					alert('Return quantity is not valid');
-					this.cart[ind].return_quantity = '';
+			},
+
+			productTotal() {
+				this.selectedProduct.total = (parseFloat(this.selectedProduct.Product_Purchase_Rate) * parseFloat(this.selectedProduct.quantity)).toFixed(2);
+			},
+
+			addToCart() {
+				if (this.selectedProduct == null || this.selectedProduct.Product_SlNo == '') {
+					alert('Select product');
+					return;
 				}
 
-				if(parseFloat(this.cart[ind].return_rate) > parseFloat(this.cart[ind].PurchaseDetails_Rate)){
-					alert('Rate is not valid');
-					this.cart[ind].return_rate = '';
+				if (this.selectedProduct.quantity <= 0) {
+					alert('Enter quantity');
+					this.$refs.quantity.focus();
+					return;
 				}
-				this.cart[ind].return_amount = parseFloat(this.cart[ind].return_quantity) * parseFloat(this.cart[ind].return_rate);
+
+				if (this.selectedProduct.Product_Purchase_Rate <= 0) {
+					alert('Enter purchase rate');
+					return;
+				}
+
+				if (parseFloat(this.selectedProduct.quantity) > parseFloat(this.productStock)) {
+					alert('Stock unavailable');
+					this.$refs.quantity.focus();
+					return;
+				}
+
+				let existingProduct = this.cart.find(product => product.Product_IDNo == this.selectedProduct.Product_SlNo);
+				if (existingProduct) {
+					alert('Product already added in cart');
+					return;
+				} else {
+					this.cart.push({
+						Product_IDNo: this.selectedProduct.Product_SlNo,
+						Product_Code: this.selectedProduct.Product_Code,
+						Product_Name: this.selectedProduct.Product_Name,
+						return_quantity: parseFloat(this.selectedProduct.quantity),
+						return_rate: this.selectedProduct.Product_Purchase_Rate,
+						return_amount: this.selectedProduct.total
+					});
+				}
+
+				this.selectedProduct = {
+					Product_SlNo: '',
+					Product_Name: '',
+					display_text: '',
+					Product_Purchase_Rate: 0,
+					quantity: 0,
+					total: 0
+				};
+
 				this.calculateTotal();
-				this.save_disabled = false;
 			},
-			calculateTotal(){
-				this.purchaseReturn.total = this.cart.reduce((prev, cur) => {return prev + (cur.return_amount ? parseFloat(cur.return_amount) : 0.00)}, 0);
+
+			calculateTotal() {
+				this.purchaseReturn.total = this.cart.reduce((prev, cur) => {
+					return prev + (cur.return_amount ? parseFloat(cur.return_amount) : 0.00)
+				}, 0);
 			},
-			savePurchaseReturn(){
+			savePurchaseReturn() {
+				if (!confirm('Are you sure to save?')) return;
 				let filteredCart = this.cart.filter(product => product.return_quantity > 0 && product.return_rate > 0);
 
-				if(filteredCart.length == 0){
+				if (filteredCart.length == 0) {
 					alert('No products to return');
 					return;
 				}
 
-				if(this.purchaseReturn.returnDate == null || this.purchaseReturn.returnDate == ''){
+				if (this.purchaseReturn.returnDate == null || this.purchaseReturn.returnDate == '') {
 					alert('Enter date');
 					return;
 				}
 
+				if (this.selectedSupplier == null || this.selectedSupplier.Supplier_SlNo == null) {
+					alert('Select supplier');
+					return;
+				}
+
+				this.purchaseReturn.Supplier_SlNo = this.selectedSupplier.Supplier_SlNo;
 				let data = {
-					invoice: this.selectedInvoice,
 					purchaseReturn: this.purchaseReturn,
 					cart: filteredCart
 				}
 
 				let url = '/add_purchase_return';
-				if(this.purchaseReturn.returnId != 0) {
+				if (this.purchaseReturn.returnId != 0) {
 					url = '/update_purchase_return';
 				}
 				this.save_disabled = true;
-				axios.post(url, data).then(async res=>{
+				axios.post(url, data).then(async res => {
 					let r = res.data;
-					if(r.success){
+					if (r.success) {
 						let conf = confirm('Success. Do you want to view invoice?');
-						if(conf){
-							window.open('/purchase_return_invoice/'+r.id, '_blank');
+						if (conf) {
+							window.open('/purchase_return_invoice/' + r.id, '_blank');
 							await new Promise(r => setTimeout(r, 1000));
 							window.location = '/purchaseReturns';
 						} else {
@@ -205,34 +338,30 @@
 			},
 
 			getReturn() {
-				axios.post('/get_purchase_returns', { id: this.purchaseReturn.returnId }).then(async res => {
+				axios.post('/get_purchase_returns', {
+					id: this.purchaseReturn.returnId
+				}).then(async res => {
 					let purchaseReturn = res.data.returns[0];
-					this.selectedInvoice = {
-						PurchaseMaster_SlNo: purchaseReturn.PurchaseMaster_SlNo,
-						PurchaseMaster_InvoiceNo: purchaseReturn.PurchaseMaster_InvoiceNo,
+					this.selectedSupplier = {
 						Supplier_SlNo: purchaseReturn.Supplier_IDdNo,
-						invoice_text: `${purchaseReturn.PurchaseMaster_InvoiceNo} - ${purchaseReturn.Supplier_Name}`,
+						Supplier_Code: purchaseReturn.Supplier_Code,
 						Supplier_Name: purchaseReturn.Supplier_Name,
-						Supplier_Address: purchaseReturn.Supplier_Address,
-						Supplier_Mobile: purchaseReturn.Supplier_Mobile,
+						display_name: `${purchaseReturn.Supplier_Code} - ${purchaseReturn.Supplier_Name}`
 					}
-
 					this.purchaseReturn.returnDate = purchaseReturn.PurchaseReturn_ReturnDate;
 					this.purchaseReturn.total = purchaseReturn.PurchaseReturn_ReturnAmount;
 					this.purchaseReturn.note = purchaseReturn.PurchaseReturn_Description;
 
-					await this.getPurchaseDetailsForReturn();
-
-					this.returnDetails = res.data.returnDetails;
-					
-					this.cart.map(product => {
-						let returnDetail = this.returnDetails.find(rd => rd.PurchaseReturnDetailsProduct_SlNo == product.Product_IDNo);
-						product.return_quantity = returnDetail?.PurchaseReturnDetails_ReturnQuantity;
-						product.returned_quantity = +product.returned_quantity - (returnDetail?.PurchaseReturnDetails_ReturnQuantity ?? 0);
-						product.return_amount = returnDetail?.PurchaseReturnDetails_ReturnAmount;
-						product.returned_amount = +product.returned_amount - (returnDetail?.PurchaseReturnDetails_ReturnAmount ?? 0);
-						return product;
-					})
+					res.data.returnDetails.forEach(detail => {
+						this.cart.push({
+							Product_IDNo: detail.PurchaseReturnDetailsProduct_SlNo ,
+							Product_Code: detail.Product_Code,
+							Product_Name: detail.Product_Name,
+							return_quantity: detail.PurchaseReturnDetails_ReturnQuantity,
+							return_rate: detail.PurchaseReturnDetails_Rate,
+							return_amount: detail.PurchaseReturnDetails_ReturnAmount
+						});
+					});
 				})
 			}
 		}

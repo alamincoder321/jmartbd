@@ -48,6 +48,7 @@ if ($module == 'dashboard' or $module == '') {
 			<b class="arrow"></b>
 		</li>
 
+		<?php if($this->session->userdata('BRANCHid') == 1): ?>
 		<li class="">
 			<a href="<?php echo base_url(); ?>module/InternationalModule">
 				<i class="menu-icon fa fa-credit-card" style="font-size: 16px;"></i>
@@ -55,6 +56,7 @@ if ($module == 'dashboard' or $module == '') {
 			</a>
 			<b class="arrow"></b>
 		</li>
+		<?php endif; ?>
 
 		<li class="">
 			<a href="<?php echo base_url(); ?>module/AccountsModule">

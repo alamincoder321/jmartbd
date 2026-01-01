@@ -59,26 +59,9 @@
 	<div class="row" style="border-bottom: 1px solid #ccc;">
 		<div class="col-md-12">
 			<form class="form-inline" v-on:submit.prevent="getProfitLoss">
-				<div class="form-group">
-					<label>Search Type</label>
-					<select class="form-control" v-model="searchType" @change="onChangeSearchType">
-						<option value="">All</option>
-						<option value="customer">By Customer</option>
-						<option value="category">By Category</option>
-						<option value="product">By Product</option>
-					</select>
-				</div>
-				<div class="form-group" v-if="searchType == 'customer'" style="display:none;" :style="{display: searchType == 'customer' ? '' : 'none'}">
+				<div class="form-group" style="margin-right: 15px;">
 					<label>Customer &nbsp;</label>
 					<v-select v-bind:options="customers" v-model="selectedCustomer" label="display_name" placeholder="Select Customer"></v-select>
-				</div>
-				<div class="form-group" v-if="searchType == 'category'" style="display:none;" :style="{display: searchType == 'category' ? '' : 'none'}">
-					<label>Category &nbsp;</label>
-					<v-select v-bind:options="categories" v-model="selectedCategory" label="ProductCategory_Name" placeholder="Select category"></v-select>
-				</div>
-				<div class="form-group" v-if="searchType == 'product'" style="display:none;" :style="{display: searchType == 'product' ? '' : 'none'}">
-					<label>Product &nbsp;</label>
-					<v-select v-bind:options="products" v-model="selectedProduct" label="display_text" placeholder="Select product"></v-select>
 				</div>
 
 				<div class="form-group">
@@ -109,10 +92,10 @@
 						<tr>
 							<th>Product Id</th>
 							<th>Product</th>
-							<th>Sale Quantity</th>
+							<th>Sold Quantity</th>
 							<th>Purchase Rate</th>
 							<th>Purchased Total</th>
-							<th>Sale Amount</th>
+							<th>Sold Amount</th>
 							<th>Profit/Loss</th>
 						</tr>
 					</thead>
@@ -169,97 +152,97 @@
 							</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">CashTransaction Receive (+)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.income | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Purchase Discount (+)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.purchase_discount | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Purchase Transport Cost (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.purchase_transport_cost | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Purchase VAT (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.purchase_vat | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Sales Transport Cost (+)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ totalTransportCost | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Sales VAT (+)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ totalVat = reportData.reduce((prev, cur) => { return prev + parseFloat(cur.SaleMaster_TaxAmount) }, 0).toFixed(2) }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Sales Discount (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ totalDiscount = reportData.reduce((prev, cur) => { return prev + parseFloat(cur.SaleMaster_TotalDiscountAmount) }, 0).toFixed(2) }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Total Point (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ totalPoint = reportData.reduce((prev, cur) => { return prev + parseFloat(cur.pointAmount) }, 0).toFixed(2) }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Total Returned Value (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.returned_amount | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Total Damaged (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.damaged_amount | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">CashTransaction Payment (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.expense | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Employee Payment (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.employee_payment | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Profit Distribute (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.profit_distribute | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Loan Interest (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.loan_interest | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Assets Sales | Profit/Loss (-)</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">{{ otherIncomeExpense.assets_sales_profit_loss | decimal }}</td>
 						</tr>
 
-						<tr v-if="searchType == '' || searchType == 'customer'">
+						<tr>
 							<td colspan="4" style="text-align:right;">Profit</td>
 							<td colspan="2"></td>
 							<td style="text-align:right;">
@@ -285,7 +268,6 @@
 		el: '#profitLoss',
 		data() {
 			return {
-				searchType: '',
 				filter: {
 					customer: null,
 					dateFrom: moment().format('YYYY-MM-DD'),
@@ -293,10 +275,6 @@
 				},
 				customers: [],
 				selectedCustomer: null,
-				categories: [],
-				selectedCategory: null,
-				products: [],
-				selectedProduct: null,
 				reportData: [],
 				otherIncomeExpense: {
 					income: 0,
@@ -319,6 +297,9 @@
 				return value == null || value == undefined ? '0.00' : parseFloat(value).toFixed(2);
 			}
 		},
+		created() {
+			this.getCustomers();
+		},
 		computed: {
 			totalTransportCost() {
 				return this.reportData.reduce((prev, cur) => {
@@ -339,38 +320,13 @@
 			}
 		},
 		methods: {
-			onChangeSearchType() {
-				this.reportData = [];
-				this.selectedCustomer = null;
-				this.selectedCategory = null;
-				this.selectedProduct = null;
-				if (this.searchType == 'category') {
-					this.getCategories();
-				} else if (this.searchType == 'customer') {
-					this.getCustomers();
-				} else if (this.searchType == 'product') {
-					this.getProducts();
-				}
-			},
 			getCustomers() {
 				axios.get('/get_customers').then(res => {
 					this.customers = res.data;
 				})
 			},
-			getCategories() {
-				axios.get('/get_categories').then(res => {
-					this.categories = res.data;
-				})
-			},
-			getProducts() {
-				axios.get('/get_products').then(res => {
-					this.products = res.data;
-				})
-			},
 
 			async getProfitLoss() {
-				this.filter.productId = this.selectedProduct ? this.selectedProduct.Product_SlNo : null;
-				this.filter.categoryId = this.selectedCategory ? this.selectedCategory.ProductCategory_SlNo : null;
 				if (this.selectedCustomer != null) {
 					this.filter.customer = this.selectedCustomer.Customer_SlNo;
 				} else {

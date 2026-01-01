@@ -527,7 +527,6 @@
 				},
 				vatPercent: 0,
 				discountPercent: 0,
-				discountAmount: 0,
 				isFree: 'no',
 				cart: [],
 				bankCart: [],
@@ -705,6 +704,16 @@
 				}
 
 				if (this.selectedCustomer.Customer_SlNo != '') {
+					if (this.sales.salesId != 0 && this.oldCustomerId != parseInt(this.selectedCustomer.Customer_SlNo)) {
+						let changeConfirm = confirm('Changing customer will set previous due to current due amount. Do you really want to change customer?');
+						if (changeConfirm == false) {
+							return;
+						}
+					} else if (this.sales.salesId != 0 && this.oldCustomerId == parseInt(this.selectedCustomer.Customer_SlNo)) {
+						this.sales.previousDue = this.oldPreviousDue;
+						return;
+					}
+
 					await this.getCustomerDue();
 					this.calculateTotal();
 				}
@@ -795,17 +804,17 @@
 				}
 			},
 			productTotal() {
-				let prev_qty = 0;
-				if (this.barcode == true) {
-					let cart_prev = this.cart.find(p => (this.selectedProduct.Product_SlNo == p.productId));
-					if (cart_prev) {
-						prev_qty = cart_prev.quantity;
-					}
-
-					// console.log(prev_qty);
-				}
-
-				let qty = (parseFloat(this.selectedProduct.quantity) || 0) + prev_qty;
+			    	let prev_qty = 0;
+			    	if (this.barcode == true) {
+			    	    	let cart_prev= this.cart.find(p => (this.selectedProduct.Product_SlNo == p.productId));
+			    	    	if(cart_prev){
+			    	    	    prev_qty = cart_prev.quantity;
+			    	    	}
+			    	    	
+			    	    // console.log(prev_qty);
+			    	}
+			    
+				let qty = (parseFloat(this.selectedProduct.quantity) || 0)  + prev_qty;
 				let rate = parseFloat(this.selectedProduct.Product_SellingPrice) || 0;
 				let discount = parseFloat(this.selectedProduct.discount) || 0;
 				let discountAmount = 0;
@@ -913,7 +922,7 @@
 						}
 						this.selectedProduct = prod;
 						this.selectedProduct.quantity = prod.quantity;
-
+						
 						await this.productTotal();
 						await this.productOnChange();
 						if (parseFloat(this.productStock) < parseFloat(this.selectedProduct.quantity)) {
@@ -957,7 +966,6 @@
 					productId: this.selectedProduct.Product_SlNo ? this.selectedProduct.Product_SlNo : this.selectedProduct.ComboId,
 					productCode: this.selectedProduct.Product_Code,
 					categoryName: this.selectedProduct.ProductCategory_Name,
-					ProductsubCategory_ID: this.selectedProduct.ProductsubCategory_ID,
 					name: this.selectedProduct.Product_Name,
 					salesRate: this.selectedProduct.Product_SellingPrice,
 					vat: this.selectedProduct.vat,
@@ -1045,13 +1053,9 @@
 						return +prev + +(curr.discountAmount)
 					}, 0);
 
-					if (this.sales.salesId != 0 && this.sales.discount == 0) {
-						this.sales.discount = this.discountAmount;
-					}
-
 					this.discountPercent = (parseFloat(this.sales.discount) / parseFloat(this.sales.subTotal) * 100).toFixed(2);
 				}
-				this.sales.total = ((parseFloat(this.sales.subTotal) + parseFloat(this.sales.vat) + parseFloat(this.sales.transportCost)) - parseFloat(+this.sales.discount + +this.sales.pointAmount)).toFixed(2);
+				this.sales.total = ((parseFloat(this.sales.subTotal) + parseFloat(this.sales.vat) + parseFloat(this.sales.transportCost)) - parseFloat(+this.sales.discount + this.sales.pointAmount)).toFixed(2);
 				if (event.target.id == 'cashPaid' || this.bankCart.length > 0) {
 					this.sales.paid = parseFloat(parseFloat(this.sales.cashPaid) + parseFloat(this.sales.bankPaid)).toFixed(2);
 					if (this.sales.paid == this.sales.total) {
@@ -1218,7 +1222,7 @@
 						let conf = confirm('Sale success, Do you want to view invoice?');
 						if (conf) {
 							window.open('/sale_invoice_print/' + r.salesId, '_blank');
-							await new Promise(r => setTimeout(r, 1500));
+							await new Promise(r => setTimeout(r, 1000));
 							window.location = this.sales.isService == 'false' ? '/sales/product' : '/sales/service';
 						} else {
 							window.location = this.sales.isService == 'false' ? '/sales/product' : '/sales/service';
@@ -1261,15 +1265,17 @@
 					this.sales_due_on_update = sales.SaleMaster_DueAmount;
 
 					this.vatPercent = parseFloat(this.sales.vat) * 100 / parseFloat(this.sales.subTotal);
-					this.discountPercent = parseFloat(sales.SaleMaster_TotalDiscountAmount) * 100 / parseFloat(this.sales.subTotal);
-					this.discountAmount = sales.SaleMaster_TotalDiscountAmount;
+					this.discountPercent = parseFloat(this.sales.discount) * 100 / parseFloat(this.sales.subTotal);
 
 					this.selectedEmployee = {
 						Employee_SlNo: sales.employee_id,
 						Employee_Name: sales.Employee_Name
 					}
 					if (sales.SaleMaster_bankPaid > 0) {
-						this.bankCart = r.banks;
+						this.selectedBank = {
+							account_id: sales.bank_id,
+							display_name: `${sales.bank_name} - ${sales.account_number} - ${sales.account_name}`
+						}
 					}
 
 					this.selectedCustomer = {
@@ -1282,7 +1288,7 @@
 						Customer_Type: sales.Customer_Type,
 						is_member: sales.is_member,
 						amount: sales.amount,
-						point: (+sales.customerPoint + +sales.pointAmount) - sales.point
+						point: +sales.customerPoint + +sales.pointAmount
 					}
 
 					r.saleDetails.forEach(product => {
@@ -1290,7 +1296,6 @@
 							productCode: product.Product_Code,
 							productId: product.Product_IDNo,
 							categoryName: product.ProductCategory_Name,
-							ProductsubCategory_ID: product.ProductsubCategory_ID,
 							name: product.Product_Name,
 							salesRate: product.SaleDetails_Rate,
 							vat: product.SaleDetails_Tax,
@@ -1300,10 +1305,14 @@
 							isFree: product.isFree,
 							discount: product.SaleDetails_Discount,
 							discountAmount: product.Discount_amount,
+							
 						}
 
 						this.cart.push(cartProduct);
 					})
+
+					let gCustomerInd = this.customers.findIndex(c => c.Customer_Type == 'G');
+					this.customers.splice(gCustomerInd, 1);
 				})
 			}
 		}

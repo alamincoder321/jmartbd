@@ -68,6 +68,13 @@
 				<div class="row">
 					<div class="col-md-5 col-md-offset-1">
 						<div class="form-group">
+							<label class="col-md-4 control-label">Payment Date</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-7">
+								<input type="date" class="form-control" v-model="payment.SPayment_date" required @change="getSupplierPayments" v-bind:disabled="userType == 'u' ? true : false">
+							</div>
+						</div>
+						<div class="form-group">
 							<label class="col-md-4 control-label">Transaction Type</label>
 							<label class="col-md-1">:</label>
 							<div class="col-md-7">
@@ -79,28 +86,10 @@
 							</div>
 						</div>
 						<div class="form-group">
-							<label class="col-md-4 control-label">Payment Type</label>
-							<label class="col-md-1">:</label>
-							<div class="col-md-7">
-								<select class="form-control" v-model="payment.SPayment_Paymentby" required>
-									<option value="cash">Cash</option>
-									<option value="bank">Bank</option>
-								</select>
-							</div>
-						</div>
-						<div class="form-group" style="display:none;" v-bind:style="{display: payment.SPayment_Paymentby == 'bank' ? '' : 'none'}">
-							<label class="col-md-4 control-label">Bank Account</label>
-							<label class="col-md-1">:</label>
-							<div class="col-md-7">
-								<v-select v-bind:options="filteredAccounts" v-model="selectedAccount" label="display_text" placeholder="Select account"></v-select>
-							</div>
-						</div>
-						<div class="form-group">
 							<label class="col-md-4 control-label">Supplier</label>
 							<label class="col-md-1">:</label>
 							<div class="col-md-6 col-xs-11">
-								<select class="form-control" v-if="suppliers.length == 0"></select>
-								<v-select v-bind:options="suppliers" v-model="selectedSupplier" label="display_name" @input="getSupplierDue" v-if="suppliers.length > 0"></v-select>
+								<v-select v-bind:options="suppliers" v-model="selectedSupplier" label="display_name" @input="getSupplierDue"></v-select>
 							</div>
 							<div class="col-md-1 col-xs-1" style="padding-left:0;margin-left: -3px;">
 								<a href="/supplier" target="_blank" class="add-button"><i class="fa fa-plus"></i></a>
@@ -110,19 +99,12 @@
 							<label class="col-md-4 control-label">Due</label>
 							<label class="col-md-1">:</label>
 							<div class="col-md-7">
-								<input type="text" class="form-control" v-model="supplierDue" disabled>
+								<input type="text" class="form-control" v-model="payment.SPayment_previous_due" disabled>
 							</div>
 						</div>
 					</div>
 
 					<div class="col-md-5">
-						<div class="form-group">
-							<label class="col-md-4 control-label">Payment Date</label>
-							<label class="col-md-1">:</label>
-							<div class="col-md-7">
-								<input type="date" class="form-control" v-model="payment.SPayment_date" required @change="getSupplierPayments" v-bind:disabled="userType == 'u' ? true : false">
-							</div>
-						</div>
 						<div class="form-group">
 							<label class="col-md-4 control-label">Description</label>
 							<label class="col-md-1">:</label>
@@ -130,17 +112,28 @@
 								<input type="text" class="form-control" v-model="payment.SPayment_notes">
 							</div>
 						</div>
+						<div class="form-group" style="display: none;" :style="{display: payment.SPayment_TransactionType == 'CP' ? '' : 'none'}" v-if="payment.SPayment_TransactionType == 'CP'">
+							<label class="col-md-4 control-label">Con. Currency</label>
+							<label class="col-md-1">:</label>
+							<div class="col-md-4">
+								<input type="text" class="form-control" step="any" v-model="payment.SPayment_amount" @input="calculateConvertAmount" />
+							</div>
+							<label class="col-md-1 control-label no-padding-left">Rate</label>
+							<div class="col-md-2 no-padding-left">
+								<input type="text" class="form-control" step="any" v-model="payment.rate" @input="calculateConvertAmount" />
+							</div>
+						</div>
 						<div class="form-group">
 							<label class="col-md-4 control-label">Amount</label>
 							<label class="col-md-1">:</label>
 							<div class="col-md-7">
-								<input type="number" class="form-control"  step="0.0001" v-model="payment.SPayment_amount" required>
+								<input type="number" class="form-control" step="any" v-model="payment.convert_amount" :readonly="payment.SPayment_TransactionType == 'CP'" />
 							</div>
 						</div>
 						<div class="form-group">
-							<div class="col-md-7 col-md-offset-5">
-								<input type="submit" class="btn btn-success btn-sm" value="Save">
+							<div class="col-md-7 col-md-offset-5 text-right">
 								<input type="button" class="btn btn-danger btn-sm" value="Cancel" @click="resetForm">
+								<input type="submit" class="btn btn-success btn-sm" value="Save">
 							</div>
 						</div>
 					</div>
@@ -167,6 +160,9 @@
 							<td>{{ row.transaction_type }}</td>
 							<td>{{ row.payment_by }}</td>
 							<td>{{ row.SPayment_amount }}</td>
+							<td>{{ row.rate }}</td>
+							<td>{{ row.convert_amount }}</td>
+							<td>{{ row.SPayment_TransactionType == 'CP' ? parseFloat(+row.convert_amount + +row.SPayment_previous_due).toFixed(2) : parseFloat(row.SPayment_previous_due - row.convert_amount).toFixed(2) }}</td>
 							<td>{{ row.SPayment_notes }}</td>
 							<td>{{ row.SPayment_Addby }}</td>
 							<td>
@@ -211,7 +207,10 @@
 					account_id: null,
 					SPayment_date: moment().format('YYYY-MM-DD'),
 					SPayment_amount: '',
-					SPayment_notes: ''
+					rate: '',
+					convert_amount: '',
+					SPayment_notes: '',
+					SPayment_previous_due: 0,
 				},
 				payments: [],
 				suppliers: [],
@@ -219,7 +218,6 @@
 					display_name: 'Select Supplier',
 					Supplier_Name: ''
 				},
-				supplierDue: 0,
 				accounts: [],
 				selectedAccount: null,
 				userType: '<?php echo $this->session->userdata("accountType"); ?>',
@@ -250,8 +248,23 @@
 						align: 'center'
 					},
 					{
-						label: 'Amount',
+						label: 'Con. Amount',
 						field: 'SPayment_amount',
+						align: 'center'
+					},
+					{
+						label: 'Rate',
+						field: 'rate',
+						align: 'center'
+					},
+					{
+						label: 'Amount',
+						field: 'convert_amount',
+						align: 'center'
+					},
+					{
+						label: 'Balance',
+						field: 'SPayment_previous_due',
 						align: 'center'
 					},
 					{
@@ -312,7 +325,7 @@
 				axios.post('/get_international_supplier_due', {
 					supplierId: this.selectedSupplier.Supplier_SlNo
 				}).then(res => {
-					this.supplierDue = res.data[0].due;
+					this.payment.SPayment_previous_due = res.data[0].due;
 				})
 			},
 			getAccounts() {
@@ -320,6 +333,9 @@
 					.then(res => {
 						this.accounts = res.data;
 					})
+			},
+			calculateConvertAmount() {
+				this.payment.convert_amount = this.payment.rate ? parseFloat(this.payment.SPayment_amount * this.payment.rate).toFixed(2) : 0;
 			},
 			saveSupplierPayment() {
 				if (this.payment.SPayment_Paymentby == 'bank') {
@@ -393,14 +409,15 @@
 				this.payment.SPayment_id = 0;
 				this.payment.SPayment_customerID = '';
 				this.payment.SPayment_amount = '';
+				this.payment.rate = '';
+				this.payment.convert_amount = '';
 				this.payment.SPayment_notes = '';
+				this.payment.SPayment_previous_due = 0;
 
 				this.selectedSupplier = {
 					display_name: 'Select Supplier',
 					Supplier_Name: ''
 				}
-
-				this.supplierDue = 0;
 			}
 		}
 	})

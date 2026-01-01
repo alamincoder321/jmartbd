@@ -272,7 +272,7 @@ class InternationalSupplier extends CI_Controller
                     end, ' ', sp.SPayment_notes
                 ) as description,
                 0.00 as bill,
-                sp.SPayment_amount as paid,
+                sp.convert_amount as paid,
                 0.00 as due,
                 0.00 as cash_received,
                 0.00 as balance
@@ -296,7 +296,7 @@ class InternationalSupplier extends CI_Controller
                 0.00 as bill,
                 0.00 as paid,
                 0.00 as due,
-                sp2.SPayment_amount as cash_received,
+                sp2.convert_amount as cash_received,
                 0.00 as balance
             from tbl_international_supplier_payment sp2
             left join tbl_bank_accounts ba on ba.account_id = sp2.account_id
@@ -311,7 +311,7 @@ class InternationalSupplier extends CI_Controller
 
         foreach ($payments as $key => $payment) {
             $lastBalance = $key == 0 ? $previousDueQuery->previous_due : $payments[$key - 1]->balance;
-            $payment->balance = ($lastBalance + $payment->bill + $payment->cash_received) - ($payment->paid);
+            $payment->balance = ($lastBalance + $payment->bill + $payment->paid) - ($payment->cash_received);
         }
 
         if ((isset($data->dateFrom) && $data->dateFrom != null) && (isset($data->dateTo) && $data->dateTo != null)) {

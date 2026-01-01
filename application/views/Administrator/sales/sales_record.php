@@ -79,6 +79,7 @@
 					<select class="form-control" v-model="searchType" @change="onChangeSearchType">
 						<option value="">All</option>
 						<option value="customer">By Customer</option>
+						<option value="supplier">By Supplier</option>
 						<option value="employee">By Employee</option>
 						<option value="category">By Category</option>
 						<option value="quantity">By Quantity</option>
@@ -89,6 +90,11 @@
 				<div class="form-group" style="display:none;" v-bind:style="{display: searchType == 'customer' && customers.length > 0 ? '' : 'none'}">
 					<label>Customer</label>
 					<v-select v-bind:options="customers" v-model="selectedCustomer" label="display_name"></v-select>
+				</div>
+
+				<div class="form-group" style="display:none;" v-bind:style="{display: searchType == 'supplier' && suppliers.length > 0 ? '' : 'none'}">
+					<label>Supplier</label>
+					<v-select v-bind:options="suppliers" v-model="selectedSupplier" label="display_name"></v-select>
 				</div>
 
 				<div class="form-group" style="display:none;" v-bind:style="{display: searchType == 'employee' && employees.length > 0 ? '' : 'none'}">
@@ -188,7 +194,15 @@
 					</thead>
 					<tbody>
 						<template v-for="sale in sales">
-							<tr :style="{background: (sale.Status == 'p' && sale.web_order == '1') ? 'rgb(252 179 179)' : ''}">
+							<tr 
+							:style="{
+								background: (sale.Status == 'p' && sale.web_order == '1')
+									? 'rgb(252 179 179)'
+									: (sale.Status == 'a' && sale.web_order == '1' && sale.delivery_status == 0)
+										? 'rgb(246 184 66)'
+										: ''
+							}"
+							>
 								<td>{{ sale.SaleMaster_InvoiceNo }}</td>
 								<td>{{ sale.SaleMaster_SaleDate }}</td>
 								<td>{{ sale.Customer_Name }}</td>
@@ -203,10 +217,10 @@
 									<a href="" title="Chalan" v-bind:href="`/chalan/${sale.SaleMaster_SlNo}`" target="_blank"><i class="fa fa-file-o"></i></a>
 									<?php if ($this->session->userdata('accountType') != 'u') { ?>
 
-										<a v-if="sale.Status != 'c' && sale.Status != 'd'" href="javascript:"
+										<a v-if="sale.Status != 'c' && sale.Status != 'd' && sale.web_order != 1" href="javascript:"
 											title="Edit Sale" @click="checkReturnAndEdit(sale)"><i
 												class="fa fa-edit"></i></a>
-										<a v-if="sale.Status != 'c' && sale.Status != 'd'" href="" title="Delete Sale"
+										<a v-if="sale.Status != 'c' && sale.Status != 'd' && sale.web_order != 1" href="" title="Delete Sale"
 											@click.prevent="deleteSale(sale.SaleMaster_SlNo)"><i
 												class="fa fa-trash"></i></a>
 										&nbsp;
@@ -218,6 +232,7 @@
 										<div v-if="sale.web_order == 1">
 											<a href="" v-if="sale.Status == 'p'" title="Confirm Order" @click.prevent="OrderStatus(sale.SaleMaster_SlNo, 'a')">Confirm</a>
 											<a href="" v-if="sale.Status == 'p'" title="Cancel Order" @click.prevent="OrderStatus(sale.SaleMaster_SlNo, 'c')">Cancel</a>
+												<a href="" v-if="sale.Status == 'a' && sale.delivery_status == 0" title="Process Order" @click.prevent="OrderDelivery(sale.SaleMaster_SlNo, '1')">Delivered</a>
 										</div>
 										<!-- 
 											<a href="javascript:" title="Edit Sale" @click="checkReturnAndEdit(sale)"><i
@@ -276,7 +291,15 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="sale in sales" :style="{background: (sale.Status == 'p' && sale.web_order == '1') ? 'rgb(252 179 179)' : ''}">
+						<tr v-for="sale in sales" 
+						:style="{
+							background: (sale.Status == 'p' && sale.web_order == '1')
+								? 'rgb(252 179 179)'
+								: (sale.Status == 'a' && sale.web_order == '1' && sale.delivery_status == 0)
+									? 'rgb(246 184 66)'
+									: ''
+						}"
+						>
 							<td>{{ sale.SaleMaster_InvoiceNo }}</td>
 							<td>{{ sale.SaleMaster_SaleDate }}</td>
 							<td>{{ sale.Customer_Name }}</td>
@@ -303,8 +326,9 @@
 									</div> -->
 
 
-									<a v-if="sale.Status != 'c' && sale.Status != 'd'" href="javascript:" title="Edit Sale" @click="checkReturnAndEdit(sale)"><i class="fa fa-edit"></i></a>
-									<a v-if="sale.Status != 'c' && sale.Status != 'd'" href="" title="Delete Sale" @click.prevent="deleteSale(sale.SaleMaster_SlNo)"><i class="fa fa-trash"></i></a>
+									<a v-if="sale.Status != 'c' && sale.Status != 'd' && sale.web_order != 1" href="javascript:" title="Edit Sale" @click="checkReturnAndEdit(sale)"><i class="fa fa-edit"></i></a>
+									<a v-if="sale.Status != 'c' && sale.Status != 'd' && sale.web_order != 1" href="" title="Delete Sale" @click.prevent="deleteSale(sale.SaleMaster_SlNo)"><i class="fa fa-trash"></i></a>
+										<a href="" v-if="sale.Status == 'a' && sale.delivery_status == 0" title="Process Order" @click.prevent="OrderDelivery(sale.SaleMaster_SlNo, '1')">Delivered</a>
 									&nbsp;
 									<span v-if="sale.web_order == 1" class="label" :class="statusData(sale.Status).class">
 										{{ statusData(sale.Status).text }}
@@ -384,17 +408,21 @@
 								<th>Product Id</th>
 								<th>Product Information</th>
 								<th>Quantity</th>
+								<th>Rate</th>
+								<th>Total Amount</th>
 							</tr>
 						</thead>
 						<tbody>
 							<template v-for="sale in sales">
 								<tr>
-									<td colspan="3" style="text-align:center;background: #ccc;">{{ sale.category_name }}</td>
+									<td colspan="5" style="text-align:center;background: #ccc;">{{ sale.category_name }}</td>
 								</tr>
 								<tr v-for="product in sale.products">
 									<td>{{ product.product_code }}</td>
 									<td>{{ product.product_name }}</td>
-									<td style="text-align:right;">{{ product.quantity }}</td>
+									<td style="text-align:center;">{{ product.quantity }}</td>
+									<td style="text-align:right;">{{ product.sale_rate }}</td>
+									<td style="text-align:right;">{{ parseFloat(product.sale_rate * product.quantity).toFixed(2) }}</td>
 								</tr>
 							</template>
 						</tbody>
@@ -422,6 +450,8 @@
 				recordType: 'without_details',
 				dateFrom: moment().format('YYYY-MM-DD'),
 				dateTo: moment().format('YYYY-MM-DD'),
+				suppliers: [],
+				selectedSupplier: null,
 				customers: [],
 				selectedCustomer: null,
 				employees: [],
@@ -434,7 +464,7 @@
 				selectedCategory: null,
 				sales: [],
 				searchTypesForRecord: ['', 'user', 'customer', 'employee'],
-				searchTypesForDetails: ['quantity', 'category'],
+				searchTypesForDetails: ['quantity', 'category', 'supplier'],
 				status: 'a'
 			}
 		},
@@ -502,11 +532,18 @@
 					this.getCustomers();
 				} else if (this.searchType == 'employee') {
 					this.getEmployees();
+				} else if (this.searchType == 'supplier') {
+					this.getSuppliers();
 				}
 			},
 			getProducts() {
 				axios.get('/get_products').then(res => {
 					this.products = res.data;
+				})
+			},
+			getSuppliers() {
+				axios.get('/get_suppliers').then(res => {
+					this.suppliers = res.data;
 				})
 			},
 			getCustomers() {
@@ -545,6 +582,9 @@
 				if (this.searchType != 'category') {
 					this.selectedCategory = null;
 				}
+				if (this.searchType != 'supplier') {
+					this.selectedSupplier = null;
+				}
 
 				if (this.searchTypesForRecord.includes(this.searchType)) {
 					this.getSalesRecord();
@@ -576,17 +616,13 @@
 						} else {
 							this.sales = res.data.sales;
 						}
-					})
-					.catch(error => {
-						if (error.response) {
-							alert(`${error.response.status}, ${error.response.statusText}`);
-						}
-					})
+					});
 			},
 			getSaleDetails() {
 				let filter = {
 					categoryId: this.selectedCategory == null || this.selectedCategory.ProductCategory_SlNo == '' ? '' : this.selectedCategory.ProductCategory_SlNo,
 					productId: this.selectedProduct == null || this.selectedProduct.Product_SlNo == '' ? '' : this.selectedProduct.Product_SlNo,
+					supplierId: this.selectedSupplier == null || this.selectedSupplier.Supplier_SlNo == '' ? '' : this.selectedSupplier.Supplier_SlNo,
 					dateFrom: this.dateFrom,
 					dateTo: this.dateTo
 				}
@@ -607,6 +643,7 @@
 												return {
 													product_code: product[0].Product_Code,
 													product_name: product[0].Product_Name,
+													sale_rate: product[0].SaleDetails_Rate,
 													quantity: _.sumBy(product, item => Number(item.SaleDetails_TotalQuantity))
 												}
 											})
@@ -661,6 +698,23 @@
 					}
 				})
 			},
+			
+			OrderDelivery(saleId, status) {
+				axios.post('/order_delivery_status', {
+					saleId: saleId,
+					status: status
+				}).then(res => {
+					let r = res.data;
+					alert(r.message);
+					if (r.success) {
+						this.getSalesRecord();
+					}
+				}).catch(error => {
+					if (error.response) {
+						alert(`${error.response.status}, ${error.response.statusText}`);
+					}
+				})
+			},
 			async print() {
 				let dateText = '';
 				if (this.dateFrom != '' && this.dateTo != '') {
@@ -675,6 +729,11 @@
 				let customerText = '';
 				if (this.selectedCustomer != null && this.selectedCustomer.Customer_SlNo != '' && this.searchType == 'customer') {
 					customerText = `<strong>Customer: </strong> ${this.selectedCustomer.Customer_Name}<br>`;
+				}
+				
+				let supplierText = '';
+				if (this.selectedSupplier != null && this.selectedSupplier.Supplier_SlNo != '' && this.searchType == 'supplier') {
+					supplierText = `<strong>Supplier: </strong> ${this.selectedSupplier.Supplier_Name}<br>`;
 				}
 
 				let employeeText = '';
@@ -702,7 +761,7 @@
 						</div>
 						<div class="row">
 							<div class="col-xs-6">
-								${userText} ${customerText} ${employeeText} ${productText} ${categoryText}
+								${userText} ${customerText} ${employeeText} ${productText} ${categoryText} ${supplierText}
 							</div>
 							<div class="col-xs-6 text-right">
 								${dateText}

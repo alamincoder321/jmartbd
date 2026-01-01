@@ -141,6 +141,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 				</div>
 
 
+				<?php if($this->session->userdata('BRANCHid') == 1): ?>
 				<div class="col-md-3 col-xs-6 section4">
 					<div class="col-md-12 section122" style="background-color:#ffe3d7;" onmouseover="this.style.background = '#ffc0a6'" onmouseout="this.style.background = '#ffe3d7'">
 						<a href="<?php echo base_url(); ?>module/InternationalModule">
@@ -153,6 +154,21 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 						</a>
 					</div>
 				</div>
+				<?php endif; ?>
+				<?php if($this->session->userdata('BRANCHid') != 1): ?>
+				<div class="col-md-3 col-xs-6 section4">
+					<div class="col-md-12 section122" style="background-color:#ffe3d7;" onmouseover="this.style.background = '#ffc0a6'" onmouseout="this.style.background = '#ffe3d7'">
+						<a href="<?php echo base_url(); ?>Login/logout">
+							<div class="logo">
+								<i class="fa fa-sign-out"></i>
+							</div>
+							<div class="textModule">
+								LogOut
+							</div>
+						</a>
+					</div>
+				</div>
+				<?php endif; ?>
 			</div>
 			<!-- PAGE CONTENT ENDS -->
 		</div><!-- /.col -->

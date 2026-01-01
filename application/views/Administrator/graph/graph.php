@@ -84,6 +84,7 @@
             <marquee scrollamount="3" onmouseover="this.stop();" onmouseout="this.start();" direction="left" height="30" bgcolor="#224079" style="color:white;padding-top:5px;margin-bottom: 15px;">{{ salesText }}</marquee>
         </div>
     </div>
+    <?php if ($this->session->userdata('BRANCHid') == 1) : ?>
     <div class="row" style="margin-bottom: 8px;">
         <div class="col-md-4">
             <v-select :options="branches" v-model="selectedBranch" label="Brunch_name"></v-select>
@@ -92,6 +93,7 @@
             <button class="btn btn-primary btn-xs" style="padding: 0px 15px; margin-bottom: 5px; margin-left: -20px; margin-top: -2px;" @click="getGraphData()">Filter</button>
         </div>
     </div>
+    <?php endif; ?>
     <div class="row" v-if="showData" style="display:none;" v-bind:style="{ display: showData ? '' : 'none' }">
         <div class="col-md-2  col-xs-6">
             <div class="widgets" style="border-top: 5px solid #1c8dff;">
