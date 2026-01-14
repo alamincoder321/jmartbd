@@ -152,9 +152,5 @@ class Branch extends CI_Controller {
         endif;
         
     }
-
-
-   
-
     
 }

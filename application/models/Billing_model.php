@@ -542,7 +542,7 @@ class Billing_model extends CI_Model
 			'Company_Logo_org'  => $company->Company_Logo_org,
 			'Company_Name'      => $branch->Brunch_title,
 			'Repot_Heading'     => $branch->Brunch_address,
-			'print_type'        => $company->print_type
+			'print_type'        => $branch->print_type
 		];
 	}
 

@@ -626,12 +626,15 @@ class Page extends CI_Controller
     {
         $branches = $this->db->query("
             select 
-            *,
-            case status
+            b.*,
+            case b.status
                 when 'a' then 'Active'
                 else 'Inactive'
-            end as active_status
-            from tbl_brunch
+            end as active_status,
+            d.District_Name
+            from tbl_brunch b
+            left join tbl_district d on d.District_SlNo = b.area_id
+            order by b.brunch_id desc
         ")->result();
         echo json_encode($branches);
     }
@@ -668,6 +671,7 @@ class Page extends CI_Controller
         $data['content'] = $this->load->view('Administrator/add_branch', $data, TRUE);
         $this->load->view('Administrator/index', $data);
     }
+
     public function addBranch()
     {
         $res = ['success' => false, 'message' => ''];
@@ -682,14 +686,15 @@ class Page extends CI_Controller
             }
 
             $newBranch = array(
-                'Brunch_name' => $branch->Brunch_name,
-                'Brunch_title' => $branch->Brunch_title,
+                'Brunch_name'    => $branch->Brunch_name,
+                'Brunch_title'   => $branch->Brunch_title,
                 'Brunch_address' => $branch->Brunch_address,
-                'area_id' => $branch->area_id,
-                'Brunch_sales' => '2',
-                'add_by' => $this->session->userdata("FullName"),
-                'add_time' => date('Y-m-d H:i:s'),
-                'status' => 'a'
+                'area_id'        => $branch->area_id,
+                'print_type'     => $branch->print_type,
+                'Brunch_sales'   => '2',
+                'add_by'         => $this->session->userdata("FullName"),
+                'add_time'       => date('Y-m-d H:i:s'),
+                'status'         => 'a'
             );
 
             $this->db->insert('tbl_brunch', $newBranch);
@@ -719,6 +724,7 @@ class Page extends CI_Controller
                 'Brunch_title' => $branch->Brunch_title,
                 'Brunch_address' => $branch->Brunch_address,
                 'area_id' => $branch->area_id,
+                'print_type'     => $branch->print_type,
                 'update_by' => $this->session->userdata("FullName")
             );
 
@@ -730,67 +736,7 @@ class Page extends CI_Controller
 
         echo json_encode($res);
     }
-    public function fancybox_add_brunch()
-    {
-        $this->load->view('brunch/fancybox_add_brunch');
-    }
-    public function fancybox_insert_brunch()
-    {
-        $mail = $this->input->post('Brunchname');
-        $query = $this->db->query("SELECT Brunch_name from tbl_brunch where Brunch_name = '$mail'");
-
-        if ($query->num_rows() > 0) {
-            $data['exists'] = "This Name is Already Exists";
-            $this->load->view('Administrator/ajax/brunch', $data);
-        } else {
-            $string = $this->input->post('brunchaddress');
-            $data = array(
-                "Brunch_name"              => $this->input->post('Brunchname', TRUE),
-                "Brunch_title"             => $this->input->post('brunchtitle', TRUE),
-                "Brunch_address"           => htmlspecialchars($string),
-                "Brunch_sales"             => $this->input->post('Access', TRUE)
-            );
-            $brid = $this->mt->save_date_id('tbl_brunch', $data);
-            $branchData = array(
-                "branch_id" => $brid
-            );
-            $this->mt->save_data('tbl_menuaccess', $branchData);
-
-            $this->load->view('Administrator/ajax/fancybox_add_brunch');
-        }
-    }
-    public function brunch_edit()
-    {
-        $id = $this->input->post('edit');
-        $query = $this->db->query("SELECT * from tbl_brunch where brunch_id = '$id'");
-        $data['selected'] = $query->row();
-        $this->load->view('Administrator/edit/brunch_edit', $data);
-    }
-    public function brunch_update()
-    {
-        $id = $this->input->post('id');
-        $fld = 'brunch_id';
-        $string = $this->input->post('brunchaddress');
-        $data = array(
-            "Brunch_name"        => $this->input->post('Brunchname', TRUE),
-            "Brunch_title"       => $this->input->post('brunchtitle', TRUE),
-            "Brunch_address"     => htmlentities($string),
-            "Brunch_sales"       => $this->input->post('Access', TRUE),
-            "status"            => 'a'
-        );
-        if ($this->mt->update_data("tbl_brunch", $data, $id, $fld)) {
-            $t = true;
-            echo json_encode($t);
-        }
-    }
-    public function brunch_delete()
-    {
-        $id = $this->input->post('deleted');
-        if ($this->mt->delete_data("tbl_brunch", $id, 'brunch_id')) {
-            $t = true;
-            echo json_encode($t);
-        }
-    }
+    
     //^^^^^^^^^^^^^^^^^^^^^^^^
     public function add_color()
     {

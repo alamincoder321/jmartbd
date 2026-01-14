@@ -86,6 +86,23 @@
                         <input type="text" class="form-control" v-model="branch.Brunch_title">
                     </div>
                 </div>
+                
+                <div class="form-group clearfix">
+                    <label class="control-label col-md-4">Print Type:</label>
+                    <div class="col-md-7">
+                        <label for="a4">
+                            <input type="radio" id="a4" value="1" v-model="branch.print_type"> A4 Size
+                        </label>
+                        <label for="a42">
+                            <input type="radio" id="a42" value="2" v-model="branch.print_type"> 1/2 of A4 Size
+                        </label>
+
+                        <label for="pos">
+                            <input type="radio" id="pos" value="3" v-model="branch.print_type"> POS Size
+                        </label>
+                    </div>
+                </div>
+                
             </div>
 
             <div class="col-md-5">
@@ -134,6 +151,11 @@
                             <td>{{ row.District_Name }}</td>
                             <td>{{ row.Brunch_address }}</td>
                             <td>
+                                <span v-if="row.print_type == 1">A4 Size</span>
+                                <span v-if="row.print_type == 2">1/2 of A4 Size</span>
+                                <span v-if="row.print_type == 3">POS Size</span>
+                            </td>
+                            <td>
                                 <span v-if="row.status == 'a'" class="badge badge-success">Active</span>
                                 <span v-if="row.status == 'p'" class="badge badge-danger">Inactive</span>
                             </td>
@@ -170,6 +192,7 @@
                     Brunch_name: '',
                     Brunch_title: '',
                     Brunch_address: '',
+                    print_type: 1,
                     status: 'a'
                 },
                 branches: [],
@@ -200,6 +223,11 @@
                     {
                         label: 'Branch Address',
                         field: 'Brunch_address',
+                        align: 'center'
+                    },
+                    {
+                        label: 'Print Type',
+                        field: 'print_type',
                         align: 'center'
                     },
                     {
@@ -276,6 +304,7 @@
                     Brunch_name: '',
                     Brunch_title: '',
                     Brunch_address: '',
+                    print_type: 1,
                     status: 'a'
                 }
             }
