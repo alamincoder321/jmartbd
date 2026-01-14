@@ -195,9 +195,6 @@
                     <li><input type="checkbox" class="access" value="product_ledger" v-model="access"> Product Ledger</li>
                     <li><input type="checkbox" class="access" value="damageEntry" v-model="access"> Damage Entry</li>
                     <li><input type="checkbox" class="access" value="damageList" v-model="access"> Damage List</li>
-                    <li><input type="checkbox" class="access" value="product_transfer" v-model="access"> Product Transfer</li>
-                    <li><input type="checkbox" class="access" value="transfer_list" v-model="access"> Transfer List</li>
-                    <li><input type="checkbox" class="access" value="received_list" v-model="access"> Received List</li>
                     <li><input type="checkbox" class="access" value="customer" v-model="access"> Customer Entry</li>
                     <li><input type="checkbox" class="access" value="supplier" v-model="access"> Supplier Entry</li>
                     <li><input type="checkbox" class="access" value="category" v-model="access"> Category Entry</li>

@@ -131,9 +131,10 @@ class Model_Table extends CI_Model
 
     public function generateProductCode()
     {
+        $branchId = $this->session->userdata('BRANCHid');
         $productCode = "P00001";
 
-        $lastProduct = $this->db->query("select * from tbl_product order by Product_SlNo desc limit 1");
+        $lastProduct = $this->db->query("select * from tbl_product where Product_branchid = ? order by Product_SlNo desc limit 1", $branchId);
         if ($lastProduct->num_rows() != 0) {
             $newProductId = $lastProduct->row()->Product_SlNo + 1;
             $zeros = array('0', '00', '000', '0000');

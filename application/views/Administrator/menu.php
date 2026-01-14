@@ -251,56 +251,6 @@ if ($module == 'dashboard' or $module == '') {
 		<?php endif; ?>
 
 		<?php if (
-			array_search("product_transfer", $access) > -1
-			|| array_search("transfer_list", $access) > -1
-			|| array_search("received_list", $access) > -1
-			|| isset($CheckSuperAdmin) || isset($CheckAdmin)
-		) : ?>
-			<li class="">
-				<a href="<?php echo base_url(); ?>" class="dropdown-toggle">
-					<i class="menu-icon fa fa-exchange"></i>
-					<span class="menu-text"> Product Transfer </span>
-					<b class="arrow fa fa-angle-down"></b>
-				</a>
-
-				<b class="arrow"></b>
-
-				<ul class="submenu">
-
-					<?php if (array_search("product_transfer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
-						<li class="">
-							<a href="<?php echo base_url(); ?>product_transfer">
-								<i class="menu-icon fa fa-caret-right"></i>
-								Product Transfer
-							</a>
-							<b class="arrow"></b>
-						</li>
-					<?php endif; ?>
-					<?php if (array_search("transfer_list", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
-						<li class="">
-							<a href="<?php echo base_url(); ?>transfer_list">
-								<i class="menu-icon fa fa-caret-right"></i>
-								Transfer List
-							</a>
-							<b class="arrow"></b>
-						</li>
-					<?php endif; ?>
-
-					<?php if (array_search("received_list", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
-						<li class="">
-							<a href="<?php echo base_url(); ?>received_list">
-								<i class="menu-icon fa fa-caret-right"></i>
-								<span class="menu-text"> Received List</span>
-							</a>
-							<b class="arrow"></b>
-						</li>
-					<?php endif; ?>
-
-				</ul>
-			</li>
-		<?php endif; ?>
-
-		<?php if (
 			array_search("customer", $access) > -1
 			|| array_search("supplier", $access) > -1
 			|| array_search("brunch", $access) > -1

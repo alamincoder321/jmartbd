@@ -151,8 +151,6 @@
 							<th>Sale ReturnQty</th>
 							<th>Exc. InQty</th>
 							<th>Exc. OutQty</th>
-							<th>Trans. InQty</th>
-							<th>Trans. OutQty</th>
 							<th>Current Qty</th>
 							<th>Rate</th>
 							<th>Sell Rate</th>
@@ -171,8 +169,6 @@
 							<td>{{ product.sales_returned_quantity }}</td>
 							<td>{{ product.exchange_in_quantity }}</td>
 							<td>{{ product.exchange_out_quantity }}</td>
-							<td>{{ product.transferred_to_quantity}}</td>
-							<td>{{ product.transferred_from_quantity}}</td>
 							<td>{{ product.current_quantity }} {{ product.Unit_Name }}</td>
 							<td>{{ product.Product_Purchase_Rate | decimal }}</td>
 							<td>{{ product.Product_SellingPrice | decimal }}</td>
@@ -181,7 +177,7 @@
 					</tbody>
 					<tfoot>
 						<tr>
-							<th colspan="15" style="text-align:right;">Stock Purchase Value</th>
+							<th colspan="13" style="text-align:right;">Stock Purchase Value</th>
 							<th>{{ stock.reduce((pr, cu) => {return pr + parseFloat(cu.stock_value)}, 0) | decimal }}</th>
 						</tr>
 					</tfoot>

@@ -254,48 +254,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 						</div>
 					</div>
 				<?php endif; ?>
-				<?php if (array_search("product_transfer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
-					<div class="col-md-2 col-xs-6 custom-padding ">
-						<div class="col-md-12 section20">
-							<a href="<?php echo base_url(); ?>product_transfer">
-								<div class="logo">
-									<i class="menu-icon fa fa-exchange"></i>
-								</div>
-								<div class="textModule">
-									Product Transfer
-								</div>
-							</a>
-						</div>
-					</div>
-				<?php endif; ?>
-				<?php if (array_search("transfer_list", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
-					<div class="col-md-2 col-xs-6 custom-padding ">
-						<div class="col-md-12 section20">
-							<a href="<?php echo base_url(); ?>transfer_list">
-								<div class="logo">
-									<i class="menu-icon fa fa-list"></i>
-								</div>
-								<div class="textModule">
-									Transfer List
-								</div>
-							</a>
-						</div>
-					</div>
-				<?php endif; ?>
-				<?php if (array_search("received_list", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
-					<div class="col-md-2 col-xs-6 custom-padding ">
-						<div class="col-md-12 section20">
-							<a href="<?php echo base_url(); ?>received_list">
-								<div class="logo">
-									<i class="menu-icon fa fa-list"></i>
-								</div>
-								<div class="textModule">
-									Received List
-								</div>
-							</a>
-						</div>
-					</div>
-				<?php endif; ?>
+				
 				<?php if (array_search("customer", $access) > -1 || isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
 					<div class="col-md-2 col-xs-6 custom-padding ">
 						<div class="col-md-12 section20">

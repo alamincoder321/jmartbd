@@ -37,7 +37,7 @@ class Page extends CI_Controller
     // Product Category 
     public function getCategories()
     {
-        $categories = $this->db->query("select * from tbl_productcategory where status = 'a'")->result();
+        $categories = $this->db->query("select * from tbl_productcategory where status = 'a' and category_branchid = ?", $this->session->userdata('BRANCHid'))->result();
         echo json_encode($categories);
     }
 
@@ -62,7 +62,7 @@ class Page extends CI_Controller
             $data = array(
                 "ProductCategory_Name"              => $this->input->post('catname', TRUE),
                 "ProductCategory_Description"       => $this->input->post('catdescrip', TRUE),
-                "status"                               => 'a',
+                "status"                            => 'a',
                 "AddBy"                              => $this->session->userdata("FullName"),
                 "AddTime"                           => date("Y-m-d H:i:s"),
                 "category_branchid"                 => $this->brunch
@@ -123,7 +123,7 @@ class Page extends CI_Controller
             $id = $_GET['id'];
             $query = " and ProductCategory_ID = '$id'";
         }
-        $categories = $this->db->query("select * from tbl_produsubctcategory where status = 'a'" . $query)->result();
+        $categories = $this->db->query("select * from tbl_produsubctcategory where status = 'a' and category_branchid = ?" . $query, $this->session->userdata('BRANCHid'))->result();
         echo json_encode($categories);
     }
 
