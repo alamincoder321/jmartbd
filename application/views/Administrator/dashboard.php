@@ -368,7 +368,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 				<?php endif; ?>
 
 
-				<?php if ($this->session->userdata('BRANCHid') == 1 && (isset($CheckSuperAdmin) || isset($CheckAdmin))) : ?>
+				<?php if (isset($CheckSuperAdmin) || isset($CheckAdmin)) : ?>
 					<div class="col-md-2 col-xs-6 custom-padding ">
 						<div class="col-md-12 section20">
 							<a href="<?php echo base_url(); ?>companyProfile">
@@ -382,6 +382,7 @@ if (($module == 'dashboard' || $module == '') && $this->session->userdata('accou
 						</div>
 					</div>
 				<?php endif; ?>
+				
 				<?php if (isset($CheckSuperAdmin)) : ?>
 					<div class="col-md-2 col-xs-6 custom-padding ">
 						<div class="col-md-12 section20">

@@ -539,8 +539,9 @@ class Page extends CI_Controller
     {
         $data['Company_Name'] =  $this->input->post('Company_name', true);
         $data['Repot_Heading'] =  $this->input->post('Description', true);
-        $data['print_type'] = $this->input->post('inpt', true);
         $data['invoice_footer'] = $this->input->post('invoice_footer', true);
+
+        $this->db->set('print_type', $this->input->post('inpt', true))->where('brunch_id', $this->brunch)->update('tbl_brunch');
 
         if (isset($_FILES['companyLogo']) && $_FILES['companyLogo']['error'] != UPLOAD_ERR_NO_FILE) {
 

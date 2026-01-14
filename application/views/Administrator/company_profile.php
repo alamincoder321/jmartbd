@@ -108,18 +108,53 @@
 						</div>
 					</div>
 
+					<?php $branch_info = $this->db->where('brunch_id', $this->session->userdata('BRANCHid'))->get('tbl_brunch')->row(); ?>
+
+					<div class="control-group" style="margin-top:15px;">
+						<label class="col-sm-12 control-label bolder blue">Invoice Print Type</label>
+						<div class="radio inline-radio">
+							<label>
+								<input name="inpt" id="a4" type="radio" value="1" <?php if ($branch_info->print_type == 1) {
+									echo "checked";
+								} ?> class="ace" />
+								<span class="lbl"> A4 Size</span>
+							</label>
+						</div>
+
+						<div class="radio inline-radio">
+							<label>
+								<input name="inpt" id="a42" type="radio" value="2" <?php if ($branch_info->print_type == 2) {
+									echo "checked";
+								} ?> class="ace" />
+								<span class="lbl"> 1/2 of A4 Size</span>
+							</label>
+						</div>
+
+						<div class="radio inline-radio">
+							<label>
+								<input name="inpt" id="pos" type="radio" value="3" <?php if ($branch_info->print_type == 3) {
+									echo "checked";
+								} ?> class="ace" />
+								<span class="lbl"> POS </span>
+							</label>
+						</div>
+					</div>
+
 					<div class="form-group" style="margin-top:15px;">
 						<label class="col-sm-4 control-label" for=""> </label>
 						<label class="col-sm-1 control-label"></label>
-						<div class="col-sm-7 text-right">
-							<button type="submit" name="btnSubmit" title="Update" class="btn btn-sm btn-info">
+						<div class="col-sm-6">
+							<button type="submit" name="btnSubmit" title="Update" class="btn btn-sm btn-info pull-left">
 								Update
 								<i class="ace-icon fa fa-arrow-right icon-on-right bigger-110"></i>
 							</button>
+
 						</div>
 					</div>
 				</form>
-				<?php } ?>
+				<?php
+			}
+			?>
 
 		</div>
 	</div>
