@@ -602,9 +602,9 @@
 			calculateTotal() {
 				this.purchase.subTotal = this.cart.reduce((prev, curr) => {
 					return prev + parseFloat(curr.total);
-				}, 0).toFixed(2);
-				this.purchase.vat = ((this.purchase.subTotal * parseFloat(this.vatPercent)) / 100).toFixed(2);
-				this.purchase.total = ((parseFloat(this.purchase.subTotal) + parseFloat(this.purchase.vat) + parseFloat(this.purchase.freight)) - parseFloat(this.purchase.discount)).toFixed(2);
+				}, 0).toFixed(4);
+				this.purchase.vat = ((this.purchase.subTotal * parseFloat(this.vatPercent)) / 100).toFixed(4);
+				this.purchase.total = ((parseFloat(this.purchase.subTotal) + parseFloat(this.purchase.vat) + parseFloat(this.purchase.freight)) - parseFloat(this.purchase.discount)).toFixed(4);
 				if (this.selectedSupplier.Supplier_Type == 'G') {
 					this.purchase.paid = this.purchase.total;
 					this.purchase.due = 0;
@@ -612,7 +612,7 @@
 					if (event.target.id != 'paid') {
 						this.purchase.paid = 0;
 					}
-					this.purchase.due = (parseFloat(this.purchase.total) - parseFloat(this.purchase.paid)).toFixed(2);
+					this.purchase.due = (parseFloat(this.purchase.total) - parseFloat(this.purchase.paid)).toFixed(4);
 				}
 			},
 			savePurchase() {

@@ -763,7 +763,7 @@
 						item.Product_SellingPrice = item.total;
 						item.Product_Name = item.packageName;
 						item.Product_Code = item.comboInvoice;
-						item.Product_Purchase_Rate = parseFloat(item.purchase_price).toFixed(2);
+						item.Product_Purchase_Rate = parseFloat(item.purchase_price).toFixed(4);
 						item.ProductCategory_Name = 'Package';
 						item.type = 'package';
 						return item;
@@ -814,8 +814,8 @@
 					discountAmount = ((qty * rate) * discount) / 100;
 				}
 
-				this.selectedProduct.discountAmount = discountAmount.toFixed(2);
-				this.selectedProduct.total = ((qty * rate) - discountAmount).toFixed(2);
+				this.selectedProduct.discountAmount = discountAmount.toFixed(4);
+				this.selectedProduct.total = ((qty * rate) - discountAmount).toFixed(4);
 				console.log(this.selectedProduct.total, (qty), rate)
 			},
 			onSalesTypeChange() {
@@ -988,11 +988,11 @@
 						product.total = product.quantity * product.salesRate;
 					} else {
 						product.quantity = parseFloat(+product.quantity);
-						product.total = parseFloat(cartProduct.quantity * product.total).toFixed(2);
+						product.total = parseFloat(cartProduct.quantity * product.total).toFixed(4);
 					}
 
 				} else {
-					product.total = parseFloat(parseFloat(product.salesRate) * parseFloat(product.quantity)).toFixed(2);
+					product.total = parseFloat(parseFloat(product.salesRate) * parseFloat(product.quantity)).toFixed(4);
 				}
 				if (parseFloat(this.productStock) < parseFloat(product.quantity)) {
 					alert("Stock unavailable");
@@ -1029,7 +1029,7 @@
 			calculateTotal() {
 				this.sales.subTotal = this.cart.reduce((prev, curr) => {
 					return prev + parseFloat(curr.salesRate * curr.quantity)
-				}, 0).toFixed(2);
+				}, 0).toFixed(4);
 				if (event.target.id != 'transportCost') {
 					this.sales.vat = this.cart.reduce((prev, curr) => {
 						return +prev + +(curr.total * (curr.vat / 100))
@@ -1037,9 +1037,9 @@
 				}
 
 				if (event.target.id == 'discountPercent') {
-					this.sales.discount = ((parseFloat(this.sales.subTotal) * parseFloat(this.discountPercent)) / 100).toFixed(2);
+					this.sales.discount = ((parseFloat(this.sales.subTotal) * parseFloat(this.discountPercent)) / 100).toFixed(4);
 				} else if (event.target.id == 'discount') {
-					this.discountPercent = (parseFloat(this.sales.discount) / parseFloat(this.sales.subTotal) * 100).toFixed(2);
+					this.discountPercent = (parseFloat(this.sales.discount) / parseFloat(this.sales.subTotal) * 100).toFixed(4);
 				} else {
 					this.sales.discount = this.cart.reduce((prev, curr) => {
 						return +prev + +(curr.discountAmount)
@@ -1049,20 +1049,20 @@
 						this.sales.discount = this.discountAmount;
 					}
 
-					this.discountPercent = (parseFloat(this.sales.discount) / parseFloat(this.sales.subTotal) * 100).toFixed(2);
+					this.discountPercent = (parseFloat(this.sales.discount) / parseFloat(this.sales.subTotal) * 100).toFixed(4);
 				}
-				this.sales.total = ((parseFloat(this.sales.subTotal) + parseFloat(this.sales.vat) + parseFloat(this.sales.transportCost)) - parseFloat(+this.sales.discount + +this.sales.pointAmount)).toFixed(2);
+				this.sales.total = ((parseFloat(this.sales.subTotal) + parseFloat(this.sales.vat) + parseFloat(this.sales.transportCost)) - parseFloat(+this.sales.discount + +this.sales.pointAmount)).toFixed(4);
 				if (event.target.id == 'cashPaid' || this.bankCart.length > 0) {
-					this.sales.paid = parseFloat(parseFloat(this.sales.cashPaid) + parseFloat(this.sales.bankPaid)).toFixed(2);
+					this.sales.paid = parseFloat(parseFloat(this.sales.cashPaid) + parseFloat(this.sales.bankPaid)).toFixed(4);
 					if (this.sales.paid == this.sales.total) {
 						this.sales.returnAmount = 0;
 						this.sales.due = 0;
 					} else if (parseFloat(this.sales.paid) > parseFloat(this.sales.total)) {
-						this.sales.returnAmount = parseFloat(this.sales.paid - this.sales.total).toFixed(2);
+						this.sales.returnAmount = parseFloat(this.sales.paid - this.sales.total).toFixed(4);
 						this.sales.due = 0;
 					} else {
 						this.sales.returnAmount = 0;
-						this.sales.due = parseFloat(this.sales.total - this.sales.paid).toFixed(2);
+						this.sales.due = parseFloat(this.sales.total - this.sales.paid).toFixed(4);
 					}
 				} else {
 					this.sales.cashPaid = this.sales.total;
@@ -1119,7 +1119,7 @@
 
 				this.sales.bankPaid = this.bankCart.reduce((pr, cu) => {
 					return pr + parseFloat(cu.amount)
-				}, 0).toFixed(2);
+				}, 0).toFixed(4);
 				this.calculateTotal();
 				this.selectedBank = {
 					account_id: '',
@@ -1132,7 +1132,7 @@
 				this.bankCart.splice(sl, 1);
 				this.sales.bankPaid = this.bankCart.reduce((pr, cu) => {
 					return pr + parseFloat(cu.amount)
-				}, 0).toFixed(2);
+				}, 0).toFixed(4);
 				this.calculateTotal();
 			},
 			holdSale() {
@@ -1193,7 +1193,7 @@
 				let url = "/add_sales";
 				if (this.sales.salesId != 0) {
 					url = "/update_sales";
-					this.sales.previousDue = parseFloat((this.sales.previousDue - this.sales_due_on_update)).toFixed(2);
+					this.sales.previousDue = parseFloat((this.sales.previousDue - this.sales_due_on_update)).toFixed(4);
 				}
 
 				if (this.selectedEmployee != null && this.selectedEmployee.Employee_SlNo != null) {

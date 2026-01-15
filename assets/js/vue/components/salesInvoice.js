@@ -57,8 +57,6 @@ const salesInvoice = Vue.component('sales-invoice', {
                             </thead>
                             </table>
                             <br/>
-                       
-
                         <table _a584de>
                             <thead>
                              
