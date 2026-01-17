@@ -342,14 +342,14 @@
 						</tr>
 						<tr style="font-weight:bold;">
 							<td colspan="5" style="text-align:right;">Total</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_SubTotalAmount)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_TotalDiscountAmount)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_Freight)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.pointAmount)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_TotalSaleAmount)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_cashPaid)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_bankPaid)}, 0).toFixed(4) }}</td>
-							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.returnAmount)}, 0).toFixed(4) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_SubTotalAmount)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_TotalDiscountAmount)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_Freight)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.pointAmount)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_TotalSaleAmount)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_cashPaid)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.SaleMaster_bankPaid)}, 0).toFixed(5) }}</td>
+							<td style="text-align:right;">{{ sales.reduce((prev, curr)=>{return prev + parseFloat(curr.returnAmount)}, 0).toFixed(5) }}</td>
 							<td></td>
 							<td></td>
 						</tr>
@@ -422,7 +422,7 @@
 									<td>{{ product.product_name }}</td>
 									<td style="text-align:center;">{{ product.quantity }}</td>
 									<td style="text-align:right;">{{ product.sale_rate }}</td>
-									<td style="text-align:right;">{{ parseFloat(product.sale_rate * product.quantity).toFixed(4) }}</td>
+									<td style="text-align:right;">{{ parseFloat(product.sale_rate * product.quantity).toFixed(5) }}</td>
 								</tr>
 							</template>
 						</tbody>

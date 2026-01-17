@@ -234,7 +234,7 @@
 			},
 
 			productTotal() {
-				this.selectedProduct.total = (parseFloat(this.selectedProduct.Product_Purchase_Rate) * parseFloat(this.selectedProduct.quantity)).toFixed(4);
+				this.selectedProduct.total = (parseFloat(this.selectedProduct.Product_Purchase_Rate) * parseFloat(this.selectedProduct.quantity)).toFixed(5);
 			},
 
 			addToCart() {

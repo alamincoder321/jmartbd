@@ -70,7 +70,7 @@
                     <label class="col-sm-6 control-label no-padding-right"> Damage Rate </label>
                     <label class="col-sm-1 control-label no-padding-right">:</label>
                     <div class="col-sm-5">
-                        <input type="number" step="0.01" placeholder="Rate" class="form-control" v-model="damage.damage_rate" required v-on:input="calculateTotal"/>
+                        <input type="number" min="0" step="any" placeholder="Rate" class="form-control" v-model="damage.damage_rate" required v-on:input="calculateTotal"/>
                     </div>
                 </div>
 
@@ -78,7 +78,7 @@
                     <label class="col-sm-6 control-label no-padding-right"> Damage Amount </label>
                     <label class="col-sm-1 control-label no-padding-right">:</label>
                     <div class="col-sm-5">
-                        <input type="number" placeholder="Amount" class="form-control" v-model="damage.damage_amount" required disabled />
+                        <input type="number" min="0" step="any" placeholder="Amount" class="form-control" v-model="damage.damage_amount" required disabled />
                     </div>
 				</div>
 

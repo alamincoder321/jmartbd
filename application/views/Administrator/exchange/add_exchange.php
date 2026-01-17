@@ -138,7 +138,7 @@
                                 <td>
                                     <input type="number" min="0" step="any" v-model="item.sale_rate" style="padding: 2px 5px; text-align: center;" @input="updateQtyRate(item)">
                                 </td>
-                                <td v-text="(item.total = (item.quantity * item.sale_rate).toFixed(4))"></td>
+                                <td v-text="(item.total = (item.quantity * item.sale_rate).toFixed(5))"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -432,7 +432,7 @@
                 item.product_id = item.selectedProduct.Product_SlNo;
                 item.purchase_rate = item.selectedProduct.Product_Purchase_Rate;
                 item.sale_rate = item.selectedProduct.Product_SellingPrice;
-                item.total = (item.quantity * item.sale_rate).toFixed(4);
+                item.total = (item.quantity * item.sale_rate).toFixed(5);
 
                 this.calculateTotal();
             },
@@ -450,16 +450,16 @@
                     item.selectedProduct = null;
                     return;
                 }
-                item.total = (item.quantity * item.sale_rate).toFixed(4);
+                item.total = (item.quantity * item.sale_rate).toFixed(5);
                 this.calculateTotal();
             },
 
             calculateTotal() {
-                this.exchange.saletotal = this.sales.saleDetails.filter(item => item.isExchange == 'yes').reduce((acc, item) => acc + parseFloat(item.SaleDetails_TotalAmount), 0).toFixed(4);
-                this.exchange.exchangeAmount = this.carts.reduce((acc, item) => acc + parseFloat(item.total), 0).toFixed(4);
-                this.exchange.total = (this.exchange.exchangeAmount - this.exchange.saletotal).toFixed(4);
+                this.exchange.saletotal = this.sales.saleDetails.filter(item => item.isExchange == 'yes').reduce((acc, item) => acc + parseFloat(item.SaleDetails_TotalAmount), 0).toFixed(5);
+                this.exchange.exchangeAmount = this.carts.reduce((acc, item) => acc + parseFloat(item.total), 0).toFixed(5);
+                this.exchange.total = (this.exchange.exchangeAmount - this.exchange.saletotal).toFixed(5);
                 if (this.exchange.total < 0) {
-                    this.exchange.total = parseFloat(0).toFixed(4);
+                    this.exchange.total = parseFloat(0).toFixed(5);
                 }
             },
 
