@@ -60,6 +60,11 @@
 	.add-button:focus {
 		color: white;
 	}
+
+	tr th,
+	tr td {
+		vertical-align: middle !important;
+	}
 </style>
 
 <div id="sales" class="row">
@@ -1065,10 +1070,10 @@
 						this.sales.due = parseFloat(this.sales.total - this.sales.paid).toFixed(5);
 					}
 				} else {
-					this.sales.cashPaid = this.sales.total;
+					this.sales.cashPaid = 0;
 					this.sales.bankPaid = 0;
-					this.sales.paid = this.sales.total;
-					this.sales.due = 0;
+					this.sales.paid = 0;
+					this.sales.due = this.sales.total;
 					this.sales.returnAmount = 0;
 				}
 			},

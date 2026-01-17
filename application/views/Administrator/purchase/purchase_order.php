@@ -41,6 +41,11 @@
 		height: 15px;
 		margin-top: 7px;
 	}
+
+	tr th,
+	tr td {
+		vertical-align: middle !important;
+	}
 </style>
 
 <div class="row" id="purchase">
@@ -394,11 +399,11 @@
 				selectedSupplier: {
 					Supplier_SlNo: '',
 					Supplier_Code: '',
-					Supplier_Name: 'General Supplier',
-					display_name: 'General Supplier',
+					Supplier_Name: 'Select Supplier',
+					display_name: 'Select Supplier',
 					Supplier_Mobile: '',
 					Supplier_Address: '',
-					Supplier_Type: 'G'
+					Supplier_Type: ''
 				},
 				oldSupplierId: null,
 				oldPreviousDue: 0,
@@ -438,23 +443,23 @@
 			async getSuppliers() {
 				await axios.get('/get_suppliers').then(res => {
 					this.suppliers = res.data;
-					this.suppliers.unshift({
-						Supplier_SlNo: '',
-						Supplier_Code: '',
-						Supplier_Name: 'General Supplier',
-						display_name: 'General Supplier',
-						Supplier_Mobile: '',
-						Supplier_Address: '',
-						Supplier_Type: 'G'
-					}, {
-						Supplier_SlNo: '',
-						Supplier_Code: '',
-						Supplier_Name: '',
-						display_name: 'New Supplier',
-						Supplier_Mobile: '',
-						Supplier_Address: '',
-						Supplier_Type: 'N'
-					})
+					// this.suppliers.unshift({
+					// 	Supplier_SlNo: '',
+					// 	Supplier_Code: '',
+					// 	Supplier_Name: 'General Supplier',
+					// 	display_name: 'General Supplier',
+					// 	Supplier_Mobile: '',
+					// 	Supplier_Address: '',
+					// 	Supplier_Type: 'G'
+					// }, {
+					// 	Supplier_SlNo: '',
+					// 	Supplier_Code: '',
+					// 	Supplier_Name: '',
+					// 	display_name: 'New Supplier',
+					// 	Supplier_Mobile: '',
+					// 	Supplier_Address: '',
+					// 	Supplier_Type: 'N'
+					// })
 				})
 			},
 			getProducts() {
@@ -470,11 +475,11 @@
 					this.selectedSupplier = {
 						Supplier_SlNo: '',
 						Supplier_Code: '',
-						Supplier_Name: 'General Supplier',
-						display_name: 'General Supplier',
+						Supplier_Name: 'Select Supplier',
+						display_name: 'Select Supplier',
 						Supplier_Mobile: '',
 						Supplier_Address: '',
-						Supplier_Type: 'G'
+						Supplier_Type: ''
 					}
 					return;
 				}
@@ -546,7 +551,7 @@
 				}
 			},
 			productTotal() {
-				this.selectedProduct.total = this.selectedProduct.quantity * this.selectedProduct.Product_Purchase_Rate;
+				this.selectedProduct.total = parseFloat(this.selectedProduct.quantity * this.selectedProduct.Product_Purchase_Rate).toFixed(5);
 			},
 			addToCart() {
 				let cartInd = this.cart.findIndex(p => (p.productId == this.selectedProduct.Product_SlNo) && (p.isFree == this.isFree));
@@ -616,7 +621,7 @@
 				}
 			},
 			savePurchase() {
-				if (this.selectedSupplier == null) {
+				if (this.selectedSupplier == null || this.selectedSupplier.Supplier_SlNo == '') {
 					alert('Select supplier');
 					return;
 				}
@@ -717,9 +722,6 @@
 
 						this.cart.push(cartProduct);
 					})
-
-					let gSupplierInd = this.suppliers.findIndex(s => s.Supplier_Type == 'G');
-					this.suppliers.splice(gSupplierInd, 1);
 				})
 			}
 		}
